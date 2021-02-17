@@ -10,7 +10,9 @@ const cwd = process.cwd();
 function main() {
 	console.log(`Args: ${args}`)
 	console.log(`Called from: ${cwd}`)
-	console.log(`Script located at: ${__dirname}`)	
+	console.log(`Script located at: ${__dirname}`);
+
+	process.exit(0);
 }
 
 main();
