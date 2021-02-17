@@ -1,0 +1,44 @@
+{
+  "name": "aqa",
+  "version": "0.1.0",
+  "description": "Dependency-less Test Runner for Node.js",
+  "main": "aqa.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": { 
+    "aqa": "./cli.js" 
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wiiseguy/aqa.git"
+  },
+  "keywords": [
+    "tests",
+    "testing",
+    "dependencyless",
+    "test",
+    "runner",
+    "fast",
+    "tdd",
+    "cli-app",
+    "cli",
+    "ava",
+    "jest",
+    "mocha",
+    "tape",
+    "tap",
+    "qunit",
+    "jasmine",
+    "assert",
+    "assertion",
+    "unit",
+    "expect"
+  ],
+  "author": "Wiiseguy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Wiiseguy/aqa/issues"
+  },
+  "homepage": "https://github.com/Wiiseguy/aqa#readme"
+}
