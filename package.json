@@ -1,13 +1,13 @@
 {
   "name": "aqa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dependency-less Test Runner for Node.js",
   "main": "aqa.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin": { 
-    "aqa": "./cli.js" 
+  "bin": {
+    "aqa": "./cli.js"
   },
   "repository": {
     "type": "git",
