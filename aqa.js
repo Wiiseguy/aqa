@@ -88,20 +88,18 @@ setImmediate(_ => {
         if(ok) {
             //console.log(`Success: "${test.name}"`);
         } else {
-            console.log(`\x1b[31mFAILED\x1b[0m:  "${test.name}": ${errorMessage}`);
-            //console.error(caughtException.stack);
+            console.error(`\x1b[31mFAILED\x1b[0m:  "${test.name}": ${errorMessage}`);
         }
     });
 
     if(fails === 0) {
-        console.log(`\x1b[32mRan ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`, '\x1b[0m')
+        console.log(`\x1b[32m Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`, '\x1b[0m')
         console.log();
     } else {
-        console.log(`\x1b[31m${fails} test failed.`, '\x1b[0m')
-        console.log();
+        console.error(`\x1b[31m ${fails} test failed.`, '\x1b[0m')
+        console.error();
         process.exit(1);
     }
 })
-
 
 module.exports = aqa;
