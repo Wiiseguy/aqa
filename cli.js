@@ -15,12 +15,12 @@ const reTestFile = /tests?.js$/;
 const reNumExtract = /\b\d+\b/;
 
 async function main() {
-	let allFiles = await getFiles(cwd);		
 	//console.log(`Args: ${args}`)
 	//console.log(`Called from: ${cwd}`)
 	//console.log(`Script located at: ${__dirname}`);
 
 	// Collect files to test
+	let allFiles = await getFiles(cwd);		
 	let testsFiles = allFiles.filter(f => f.match(reTestFile));
 	let tasks = [];
 	testsFiles.forEach(tf => {
@@ -34,8 +34,7 @@ async function main() {
 	// Execute tests
 	for(let task of tasks) {
 		try {
-			let result = await task.exec();
-			task.result = result;
+			task.result = await task.exec();
 		} catch(e) {
 			task.result = e;
 		}

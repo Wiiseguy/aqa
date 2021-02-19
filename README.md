@@ -43,7 +43,7 @@ These assertion methods are currently supported:
 #### `t.is(actual, expected)`
 Asserts that `actual` is equal to `expected`.
 #### `t.not(actual, notEpected)`
-Asserts that `actual` is **not** equal to `expected`.
+Asserts that `actual` is **not** equal to `notEpected`.
 #### `t.true(value)`
 Asserts that `value` is true.
 #### `t.false(value)`
