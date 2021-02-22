@@ -66,6 +66,8 @@ async function watchFiles() {
 			testsFiles.forEach(tf => requestRun(tf));
 		})
 	})
+
+	console.log("[watch] aqa - watcher active, waiting for file changes...")
 }
 
 async function runTests(filesToTest) {
