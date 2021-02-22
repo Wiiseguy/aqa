@@ -1,6 +1,6 @@
 {
   "name": "aqa",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Dependency-less Test Runner for Node.js",
   "main": "aqa.js",
   "scripts": {
