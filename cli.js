@@ -11,6 +11,7 @@ const cwd = process.cwd();
 
 // RegExps
 const reSkip = /\\\.|\\node_modules/;
+const reJsFile = /.js$/;
 const reTestFile = /tests?.js$/;
 const reNumExtract = /\b\d+\b/;
 
@@ -19,9 +20,56 @@ async function main() {
 	//console.log(`Called from: ${cwd}`)
 	//console.log(`Script located at: ${__dirname}`);
 
-	// Collect files to test
-	let allFiles = await getFiles(cwd);		
+	if(args[0] === '--watch') {
+		// Watch files and run tests when changed
+		watchFiles();
+	} else {
+		// Test all files
+		let allFiles = await getFiles(cwd);		
+		let result = await runTests(allFiles);
+		if(result.failed.length > 0) {
+			process.exit(1);			
+		}
+	}
+}
+
+async function watchFiles() {
+	let allFiles = await getFiles(cwd);	
 	let testsFiles = allFiles.filter(f => f.match(reTestFile));
+	let nonTestFiles = allFiles.filter(f => f.match(reJsFile) && !testsFiles.includes(f));
+
+	// Collect & debounce
+	let requestTimeout;
+	let requested = [];
+	const requestRun = f => {
+		if(!requested.includes(f)) {
+			requested.push(f);
+		}
+		clearTimeout(requestTimeout);
+		requestTimeout = setTimeout(_ => {
+			console.log("[watch] Running tests for:", requested.map(r => path.basename(r)).join(', '));
+			runTests(requested);
+			requested.length = 0;
+		}, 250);
+	};
+
+	// Watch test files
+	testsFiles.forEach(tf => {
+		fs.watch(tf, type => {
+			requestRun(tf);
+		})
+	});
+
+	// Watch non-test files and simply run all tests when these change
+	nonTestFiles.forEach(ntf => {
+		fs.watch(ntf, type => {
+			testsFiles.forEach(tf => requestRun(tf));
+		})
+	})
+}
+
+async function runTests(filesToTest) {
+	let testsFiles = filesToTest.filter(f => f.match(reTestFile));
 	let tasks = [];
 	testsFiles.forEach(tf => {
 		tasks.push({
@@ -72,10 +120,11 @@ async function main() {
 
 		console.error(`\x1b[31m ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`, '\x1b[0m')
 		console.log();
-
-		process.exit(1);
 	}
+
+	return { failed };
 }
+
 
 function getLastLine(str) {
 	str = str.trimEnd();

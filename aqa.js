@@ -10,12 +10,12 @@ const throwsDefaultOpts = {};
 
 let t = {
     is(actual, expected) {
-        if(actual != expected) {
+        if(!Object.is(actual, expected)) {
             throw new Error(`Expected ${expected}, got ${actual}`);
         }
     },
     not(actual, expected) {
-        if(actual == expected) {
+        if(Object.is(actual, expected)) {
             throw new Error(`Expected something other than ${expected}, but got ${actual}`);
         }
     },
