@@ -23,6 +23,7 @@
     "tdd",
     "cli-app",
     "cli",
+    "aqa",
     "ava",
     "jest",
     "mocha",

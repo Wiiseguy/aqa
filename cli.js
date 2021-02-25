@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-const util = require('util');
+const util = require("util");
 const fs = require("fs");
 const path = require("path");
 const child_process = require("child_process");
+const common = require("./common");
+
 const exec = util.promisify(child_process.exec);
 const readdir = fs.promises.readdir;
 
@@ -13,7 +15,7 @@ const cwd = process.cwd();
 const reSkip = /\\\.|\\node_modules/;
 const reJsFile = /.js$/;
 const reTestFile = /tests?.js$/;
-const reNumExtract = /\b\d+\b/;
+const reNumTestExtract = /(\d+) test/;
 
 async function main() {
 	//console.log(`Args: ${args}`)
@@ -99,29 +101,37 @@ async function runTests(filesToTest) {
 		
 		if(result.stderr) {
 			let lastLine = getLastLine(result.stderr);
-			numFailed += extractNumber(lastLine);
-			failed.push({ name: m.name, result})
+			let numTests = extractNumTests(lastLine);
+			if(numTests === -1) {
+				numFailed += 1;
+				failed.push({ name: m.name, result, fatal: true });
+			} else {
+				numFailed += numTests;
+				failed.push({ name: m.name, result})
+			}			
 		}
 		if(result.stdout) {
 			let lastLine = getLastLine(result.stdout);
-			numOk += extractNumber(lastLine);
+			numOk += extractNumTests(lastLine);
 		}
 	});
 
 	// Output results
 	console.log();	
-	if(numFailed === 0) {
-		console.log(`\x1b[32m Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`, '\x1b[0m')
-		console.log();
+	if(failed.length === 0) {
+		console.log(common.makeGreen(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`))
 	} else {
-		failed.forEach(f => {
-			console.log('  ', path.relative(cwd, f.name) + ':');
-			console.error(withoutLastLine(f.result.stderr));
+		failed.forEach(f => {			
+			if(f.fatal) {
+				console.error(common.makeRed("Fatal error:"), f.result.stderr)
+			} else {
+				console.log('  ', path.relative(cwd, f.name) + ':');
+				console.error(withoutLastLine(f.result.stderr));
+			}
 			console.log();	
 		});
 
-		console.error(`\x1b[31m ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`, '\x1b[0m')
-		console.log();
+		console.error(common.makeRed(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`))
 	}
 
 	return { failed };
@@ -141,12 +151,12 @@ function withoutLastLine(str) {
 	return str.substr(0, lastNl);
 }
 
-function extractNumber(str) {
-	let matches = str.match(reNumExtract);
+function extractNumTests(str) {
+	let matches = str.match(reNumTestExtract);
 	if(matches && matches.length > 0) {
-		return Number(matches[0]);
+		return Number(matches[1]);
 	}
-	return 0;
+	return -1;
 }
 
 // Taken and modified from https://stackoverflow.com/a/45130990/1423052

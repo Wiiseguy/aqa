@@ -3,6 +3,7 @@
     
     15-02-2021: Started
 */
+const common = require("./common");
 
 let tests = [];
 
@@ -88,16 +89,14 @@ setImmediate(_ => {
         if(ok) {
             //console.log(`Success: "${test.name}"`);
         } else {
-            console.error(`\x1b[31mFAILED\x1b[0m:  "${test.name}": ${errorMessage}`);
+            console.error(common.makeRed(`FAILED: `),`"${test.name}": ${errorMessage}`);
         }
     });
 
     if(fails === 0) {
-        console.log(`\x1b[32m Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`, '\x1b[0m')
-        console.log();
+        console.log(common.makeGreen(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`))
     } else {
-        console.error(`\x1b[31m ${fails} test failed.`, '\x1b[0m')
-        console.error();
+        console.error(common.makeRed(` ${fails} test failed.`))
         process.exit(1);
     }
 })

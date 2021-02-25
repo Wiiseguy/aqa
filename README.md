@@ -1,7 +1,7 @@
 # aqa
 > Dependency-less Test Runner for Node.js
 
-**aqa** is a light-weight **a**nd **q**uick **a**lternative to [ava](https://github.com/avajs/ava), with a similar API.
+**aqa** is a light-weight and **a** **q**uick **a**lternative to [ava](https://github.com/avajs/ava), with a similar API.
 
 ### Installation
 ```
