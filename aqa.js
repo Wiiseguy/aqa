@@ -68,17 +68,17 @@ function getCallerFromStack(stack) {
     return path;
 }
 
-setImmediate(_ => {
+setImmediate(async _ => {
     //console.log("aqa - starting tests");
     let fails = 0;
     // Run tests
-    tests.forEach(test => {
+    tests.forEach(async test => {
         let ok = true;
         let errorMessage = null;
         let caughtException = null;
 
         try {
-            test.fn(t);
+            await test.fn(t);
         } catch(e) {
             caughtException = e;
             fails++;

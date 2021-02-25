@@ -78,5 +78,4 @@ t.throws(_ => {
 
 
 ### Work in progress:
-- Async tests
 - Configuration (globs, paths, etc.)
