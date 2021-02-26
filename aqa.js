@@ -53,6 +53,28 @@ let t = {
             return caughtException;
         } 
         throw new Error(`Expected an exception`);
+    },
+    async throwsAsync(fn, opts) { // TODO: SPOD with throws
+        opts = { throwsDefaultOpts, ...opts };
+        let caughtException = null;
+
+        try {
+            if(typeof fn === 'function') {
+                await fn();
+            }
+        } catch(e) {
+            caughtException = e;            
+        }
+
+        if(caughtException) {
+            if(opts.instanceOf) {
+                if(!(caughtException instanceof opts.instanceOf)) {
+                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}'`);
+                }
+            }
+            return caughtException;
+        } 
+        throw new Error(`Expected an exception`);
     }
 }
 
@@ -72,7 +94,8 @@ setImmediate(async _ => {
     //console.log("aqa - starting tests");
     let fails = 0;
     // Run tests
-    tests.forEach(async test => {
+    for(let test of tests) {
+    //tests.forEach(async test => {
         let ok = true;
         let errorMessage = null;
         let caughtException = null;
@@ -83,7 +106,8 @@ setImmediate(async _ => {
             caughtException = e;
             fails++;
             ok = false;
-            errorMessage = e.toString() + ' - ' + getCallerFromStack(e.stack);
+            //console.error(e);
+            errorMessage = e.toString() + ' - ' + getCallerFromStack(e.stack);           
         }
 
         if(ok) {
@@ -91,7 +115,8 @@ setImmediate(async _ => {
         } else {
             console.error(common.makeRed(`FAILED: `),`"${test.name}": ${errorMessage}`);
         }
-    });
+    //});
+    }
 
     if(fails === 0) {
         console.log(common.makeGreen(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`))

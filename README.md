@@ -17,10 +17,10 @@ _your.tests.js:_
 const test = require('aqa')
 
 test('Test ourself', t => {    
-    t.is(1 + 1, 2);
-    t.not(1 + 1, 3);
-    t.true(1 === 1);
-    t.false(1 === 2);
+  t.is(1 + 1, 2);
+  t.not(1 + 1, 3);
+  t.true(1 === 1);
+  t.false(1 === 2);
 })
 ```
 
@@ -31,7 +31,7 @@ node your.tests.js
 To run multiple tests and integrate CI testing with your package, you need to change your package.json's `test` in the `scripts` section to `"aqa"`:
 ```json
 "scripts": {
-    "test": "aqa"
+  "test": "aqa"
 },
 ```
 Then, to run all your tests: `npm run test`
@@ -42,8 +42,8 @@ All files anywhere in your package's directory (and subdirectories) that match `
 To automatically run tests whenever you modify your files, aqa has a watch mode. If you desire this functionality, add a new script to your package.json:
 ```json
 "scripts": {
-    "test": "aqa",
-    "test:watch": "aqa --watch"
+  "test": "aqa",
+  "test:watch": "aqa --watch"
 },
 ```
 To start the watch script, run `npm run test:watch`.
@@ -62,20 +62,34 @@ Asserts that `value` is false.
 Asserts that `fn` throws an exception.
 ```js
 function uhOh() {
-    throw new Error("Uh oh.");
+  throw new Error("Uh oh.");
 }
 
 t.throws(_ => {
-    uhOh();
+  uhOh();
 })
 ```
 You can also check for specific types of exception. If the exception does not match it, the test will fail:
 ```js
 t.throws(_ => {
-    uhOh();
+  uhOh();
 }, { instanceOf: TypeError })
 ```
-
+#### `t.throwsAsync(fn, opts?)`
+The asynchronous version of t.throws(). Note the addition of async/await.
+```js
+test('Async test', async t => {
+  await t.throwsAsync(async _ => {
+    await uhOhAsync();
+  })
+})
+```
+You can also check for specific types of exception. If the exception does not match it, the test will fail:
+```js
+await t.throws(async _ => {
+  await uhOhAsync();
+}, { instanceOf: TypeError })
+```
 
 ### Work in progress:
 - Configuration (globs, paths, etc.)

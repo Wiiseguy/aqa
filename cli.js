@@ -22,10 +22,35 @@ async function main() {
 	//console.log(`Called from: ${cwd}`)
 	//console.log(`Script located at: ${__dirname}`);
 
-	if(args[0] === '--watch') {
-		// Watch files and run tests when changed
-		watchFiles();
-	} else {
+	let arg0 = args[0];
+
+	if(arg0) {
+		if(arg0[0] === '-') {
+			if(arg0 === '--watch') {
+				// Watch files and run tests when changed
+				watchFiles();
+			} else {
+				console.error("Unknown parameter:", args[0]);
+			}
+		} else {
+			// Param is file/glob
+			let allFiles = await getFiles(cwd);
+			let reGlob = common.glob(arg0);
+			let testFiles = [];
+			if(typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
+				testFiles.push(arg0);
+			} else {
+				testFiles = allFiles.filter(f => f.match(reGlob));
+				//console.log(arg0, reGlob.source, testFiles);
+			}
+			
+			let result = await runTests(testFiles, false);
+			if(result.failed.length > 0) {
+				process.exit(1);			
+			}
+		}
+	}
+	else {
 		// Test all files
 		let allFiles = await getFiles(cwd);		
 		let result = await runTests(allFiles);
@@ -69,11 +94,18 @@ async function watchFiles() {
 		})
 	})
 
-	console.log("[watch] aqa - watcher active, waiting for file changes...")
+	console.log("[watch] aqa - watcher active, waiting for file changes...");
+
+	// Initial run
+	testsFiles.forEach(tf => requestRun(tf));
 }
 
-async function runTests(filesToTest) {
-	let testsFiles = filesToTest.filter(f => f.match(reTestFile));
+async function runTests(filesToTest, autoFilter=true) {
+	let testsFiles = filesToTest;
+	if(autoFilter) {
+		testsFiles = testsFiles.filter(f => f.match(reTestFile));
+	}
+
 	let tasks = [];
 	testsFiles.forEach(tf => {
 		tasks.push({

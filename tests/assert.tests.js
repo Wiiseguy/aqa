@@ -6,6 +6,10 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function delayFail(ms) {
+    return new Promise(resolve => { throw new TypeError('delayFail') });
+}
+
 test('Test ourself', t => {    
     t.is(1 + 1, 2);
     t.not(1 + 1, 3);
@@ -17,7 +21,19 @@ test('Test ourself', t => {
     t.true(error instanceof TypeError);
 })
 
-test('An async test', async t => {
+test('Async test', async t => {
     await delay(1);
     t.true(true);
+})
+
+test('Async fail test', async t => {
+    let e = await t.throwsAsync(async _ => { 
+        await delayFail(1);
+    });
+    await t.throwsAsync(async _ => { 
+        await delayFail(1);
+    }, { instanceOf: TypeError });
+    
+    t.true(e instanceof TypeError);
+    t.is(e.message, 'delayFail');
 })
