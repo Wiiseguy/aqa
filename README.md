@@ -50,15 +50,19 @@ To start the watch script, run `npm run test:watch`.
 
 ### Assertion
 These assertion methods are currently supported:
-#### `t.is(actual, expected)`
+#### `t.is(actual, expected, message?)`
 Asserts that `actual` is equal to `expected`.
-#### `t.not(actual, notEpected)`
+#### `t.not(actual, notEpected, message?)`
 Asserts that `actual` is **not** equal to `notEpected`.
-#### `t.true(value)`
+#### `t.deepEqual(actual, expected, message?)`
+Asserts that `actual` is deeply equal to `expected`.
+#### `t.notDeepEqual(actual, expected, message?)`
+Asserts that `actual` is **not** deeply equal to `expected`.
+#### `t.true(value, message?)`
 Asserts that `value` is true.
-#### `t.false(value)`
+#### `t.false(value, message?)`
 Asserts that `value` is false.
-#### `t.throws(fn, opts?)`
+#### `t.throws(fn, opts?, message?)`
 Asserts that `fn` throws an exception.
 ```js
 function uhOh() {
@@ -75,7 +79,7 @@ t.throws(_ => {
   uhOh();
 }, { instanceOf: TypeError })
 ```
-#### `t.throwsAsync(fn, opts?)`
+#### `t.throwsAsync(fn, opts?, message?)`
 The asynchronous version of t.throws(). Note the addition of async/await.
 ```js
 test('Async test', async t => {
