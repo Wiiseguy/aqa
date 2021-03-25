@@ -131,7 +131,7 @@ async function runTests(filesToTest, autoFilter=true) {
 	tasks.forEach((m,i) => {
 		let result = m.result;
 		
-		if(result.stderr) {
+		if(result.code === 1) {
 			let lastLine = getLastLine(result.stderr);
 			let numTests = extractNumTests(lastLine);
 			if(numTests === -1) {
