@@ -55,7 +55,14 @@ Asserts that `actual` is equal to `expected`.
 #### `t.not(actual, notEpected, message?)`
 Asserts that `actual` is **not** equal to `notEpected`.
 #### `t.deepEqual(actual, expected, message?)`
-Asserts that `actual` is deeply equal to `expected`.
+Asserts that `actual` is deeply equal to `expected`. `test.ignore` can be used to skip certain properties, i.e.:
+```js
+t.deepEqual(actual, {
+  a: 3,
+  b: 'ok',
+  c: test.ignore
+})
+```
 #### `t.notDeepEqual(actual, expected, message?)`
 Asserts that `actual` is **not** deeply equal to `expected`.
 #### `t.true(value, message?)`
@@ -94,6 +101,10 @@ await t.throws(async _ => {
   await uhOhAsync();
 }, { instanceOf: TypeError })
 ```
+#### `t.notThrows(fn, message?)`
+Asserts that `fn` does not throw an exception.
+#### `t.notThrowsAsync(fn, message?)`
+Asserts that async function or Promise `fn` does not throw an exception.
 
 ### Work in progress:
 - Configuration (globs, paths, etc.)
