@@ -11,6 +11,8 @@ function aqa(testName, testFn) {
     tests.push({ name: testName, fn: testFn})
 }
 
+aqa.ignore = Symbol('aqa_ignore');
+
 function getCallerFromStack(e) {
     let stack = e.stack;
     stack = stack.replace(e.message, ''); // Stack repeats the message
@@ -46,6 +48,9 @@ let t = {
     deepEqual(actual, expected, message = "", _equality=false) {        
         const path = [];
         const compare = (a, b, path) => {
+            if(b === aqa.ignore) {
+                return true;
+            }
             // Check base equality
             if (a == b || (a === null && b === null) || (typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b))) { 
                 return true; 

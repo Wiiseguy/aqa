@@ -22,7 +22,8 @@ test('Test ourself', t => {
                 aaa: 1
             }],
             ae: NaN,
-            af: undefined
+            af: undefined,
+            ag: {ok: true}
         },
         b: [1,2,3]
     }, 
@@ -34,7 +35,8 @@ test('Test ourself', t => {
             ad: [{
                 aaa: 1
             }],
-            ae: NaN
+            ae: NaN,
+            ag: test.ignore
         },
         b: [1,2,3]
     });
