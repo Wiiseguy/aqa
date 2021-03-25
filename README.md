@@ -5,7 +5,7 @@
 
 ### Installation
 ```
-npm i aqa
+npm i aqa -D
 ```
 
 ### Usage
