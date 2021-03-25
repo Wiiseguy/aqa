@@ -155,12 +155,21 @@ let t = {
         if(caughtException) {
             if(opts.instanceOf) {
                 if(!(caughtException instanceof opts.instanceOf)) {
-                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message)}`);
+                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message, '\n')}`);
                 }
             }
             return caughtException;
         } 
         throw new Error(`Expected an exception ${prefixMessage(message)}`);
+    },
+    notThrows(fn, message = "") {
+        try {
+            if(typeof fn === 'function') {
+                fn();
+            }
+        } catch(e) {
+            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`);            
+        }
     },
     async throwsAsync(fn, opts, message = "") { // TODO: SPOD with throws?
         opts = { throwsDefaultOpts, ...opts };
@@ -183,7 +192,16 @@ let t = {
             return caughtException;
         } 
         throw new Error(`Expected an exception ${prefixMessage(message)}`);
-    }
+    },
+    async notThrowsAsync(fn, message = "") {
+        try {
+            if(typeof fn === 'function') {
+                await fn();
+            }
+        } catch(e) {
+            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`);            
+        }
+    },
 }
 
 setImmediate(async _ => {
