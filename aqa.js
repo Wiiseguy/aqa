@@ -27,6 +27,11 @@ function prefixMessage(message, prefix) {
     return '';
 }
 
+function smaritfy(o) {
+    if(typeof o === 'number' && isNaN(o)) return 'NaN';
+    return JSON.stringify(o);
+}
+
 let t = {
     is(actual, expected, message = "") {
         if(!Object.is(actual, expected)) {
@@ -41,7 +46,11 @@ let t = {
     deepEqual(actual, expected, message = "", _equality=false) {        
         const path = [];
         const compare = (a, b, path) => {
-            if (a == b) return true;
+            // Check base equality
+            if (a == b || (typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b))) { 
+                return true; 
+            }
+            // Check deeper equality
             if (typeof a === "object" && typeof b === "object" && a != null && b != null) {
                 if (a instanceof Date && b instanceof Date) {
                     return +a === +b;
@@ -49,8 +58,8 @@ let t = {
                 if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length) {
                     path.push({
                         differences: [
-                            '-' + JSON.stringify(a),
-                            '+' + JSON.stringify(b)
+                            '-' + smaritfy(a),
+                            '+' + smaritfy(b)
                         ],
                     });
                     return false;
@@ -58,46 +67,20 @@ let t = {
                 for (var p in a) {
                     if (a.hasOwnProperty(p)) {
                         path.push(p);
-                        if (typeof b[p] === 'undefined') { 
-                            path.push({
-                                differences: [
-                                '-' + JSON.stringify(a[p])
-                                ]
-                            });
+                  
+                        if (!compare(a[p], b[p], path)) { 
                             return false; 
                         }
-                        switch (typeof a[p]) {
-                            case 'object':
-                                if (!compare(a[p], b[p], path)) { 
-                                    /*path.push({
-                                        differences: [
-                                            '-' + JSON.stringify(a[p]),
-                                            '+' + JSON.stringify(b[p])
-                                        ],
-                                    });*/
-                                    return false; 
-                                } 
-                                break;
-                            default:
-                                if(a[p] !== b[p]) {
-                                    path.push({
-                                        differences: [
-                                            '-' + JSON.stringify(a[p]),
-                                            '+' + JSON.stringify(b[p])
-                                        ],
-                                    });
-                                    return false;
-                                }
-                                break;
-                        }
+                        
                         path.pop();
                     }
                 }
+                // Detect extra properties in the expected object, not found in actual
                 for (var p in b) { 
                     if (b.hasOwnProperty(p) && typeof a[p] === 'undefined') {
                         path.push({
                             differences: [
-                                '+' + JSON.stringify(b[p])
+                                '+' + smaritfy(b[p])
                             ],
                         });
                         return false;
@@ -109,8 +92,8 @@ let t = {
 
             path.push({
                 differences: [
-                    '-' + JSON.stringify(a),
-                    '+' + JSON.stringify(b)
+                    '-' + smaritfy(a),
+                    '+' + smaritfy(b)
                 ],
             });
             return false;

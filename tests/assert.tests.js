@@ -20,7 +20,8 @@ test('Test ourself', t => {
             ac: [1,2],
             ad: [{
                 aaa: 1
-            }]
+            }],
+            ae: NaN
         },
         b: [1,2,3]
     }, 
@@ -31,7 +32,8 @@ test('Test ourself', t => {
             ac: [1,2],
             ad: [{
                 aaa: 1
-            }]
+            }],
+            ae: NaN
         },
         b: [1,2,3]
     });
