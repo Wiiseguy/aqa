@@ -1,7 +1,5 @@
 const test = require('../aqa')
 
-// TODO (Placeholder)
-
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -15,6 +13,50 @@ test('Test ourself', t => {
     t.not(1 + 1, 3);
     t.true(1 === 1);
     t.false(1 === 2); 
+    t.deepEqual({
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1,2],
+            ad: [{
+                aaa: 1
+            }]
+        },
+        b: [1,2,3]
+    }, 
+    {
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1,2],
+            ad: [{
+                aaa: 1
+            }]
+        },
+        b: [1,2,3]
+    });
+    t.notDeepEqual({
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1,2],
+            ad: [{
+                aaa: 1
+            }]
+        },
+        b: [1,2,3]
+    }, 
+    {
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1,2],
+            ad: [{
+                aaa: 100000000
+            }]
+        },
+        b: [1,2,3]
+    });
 
     t.throws(_ => { throw new TypeError() });
     const error = t.throws(() => { throw new TypeError() }, {instanceOf: TypeError});
