@@ -47,7 +47,7 @@ let t = {
         const path = [];
         const compare = (a, b, path) => {
             // Check base equality
-            if (a == b || (typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b))) { 
+            if (a == b || (a === null && b === null) || (typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b))) { 
                 return true; 
             }
             // Check deeper equality
@@ -77,7 +77,7 @@ let t = {
                 }
                 // Detect extra properties in the expected object, not found in actual
                 for (var p in b) { 
-                    if (b.hasOwnProperty(p) && typeof a[p] === 'undefined') {
+                    if (b.hasOwnProperty(p) && typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
                         path.push({
                             differences: [
                                 '+' + smaritfy(b[p])

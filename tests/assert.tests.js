@@ -21,7 +21,8 @@ test('Test ourself', t => {
             ad: [{
                 aaa: 1
             }],
-            ae: NaN
+            ae: NaN,
+            af: undefined
         },
         b: [1,2,3]
     }, 
