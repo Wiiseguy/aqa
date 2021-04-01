@@ -17,13 +17,14 @@ test('Test ourself', t => {
     t.not(1 + 1, 3);
     t.true(1 === 1);
     t.false(1 === 2); 
+
     t.deepEqual({
         a: {
             aa: 1,
             ab: 2,
             ac: [1,2],
             ad: [{
-                aaa: 1
+                aaa: 12
             }],
             ae: NaN,
             af: undefined,
@@ -43,7 +44,8 @@ test('Test ourself', t => {
             ag: test.ignore
         },
         b: [1,2,3]
-    });
+        });
+
     t.notDeepEqual({
         a: {
             aa: 1,
@@ -92,4 +94,12 @@ test('Async fail test', async t => {
     t.notThrowsAsync(async _ => {
         
     });
+})
+
+test('Log test', async t => {
+    console.log("Hello", 1, 2, "arg3")
+})
+
+test('Log test 2', async t => {
+    t.log("Hello", 1, 2, "arg3");
 })

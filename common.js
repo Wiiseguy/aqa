@@ -6,6 +6,10 @@ function makeGreen(s) {
 	return `\x1b[32m${s}\x1b[0m`;
 }
 
+function makeGray(s) {
+    return `\x1b[90m${s}\x1b[0m`;
+}
+
 function escapeRegExp(s) {
     return s.replace(/[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g, '\\$&');
 }
@@ -25,8 +29,15 @@ function glob(s) {
     return r;
 }
 
+function humanTime(ms) {
+    if (ms > 1000) return Math.round(ms / 100) / 10 + 's';
+    return ms + 'ms';
+}
+
 module.exports = {
     makeRed,
     makeGreen,
-    glob
+    makeGray,
+    glob,
+    humanTime
 }

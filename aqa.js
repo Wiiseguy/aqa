@@ -2,6 +2,7 @@
     aqa - dependency-less testing
 */
 const common = require("./common");
+const [, , ...args] = process.argv;
 
 let tests = [];
 
@@ -63,8 +64,8 @@ let t = {
                 if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length) {
                     path.push({
                         differences: [
-                            '-' + smaritfy(a),
-                            '+' + smaritfy(b)
+                            '- ' + smaritfy(a),
+                            '+ ' + smaritfy(b)
                         ],
                     });
                     return false;
@@ -85,7 +86,7 @@ let t = {
                     if (b.hasOwnProperty(p) && typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
                         path.push({
                             differences: [
-                                '+' + smaritfy(b[p])
+                                '+ ' + smaritfy(b[p])
                             ],
                         });
                         return false;
@@ -97,8 +98,8 @@ let t = {
 
             path.push({
                 differences: [
-                    '-' + smaritfy(a),
-                    '+' + smaritfy(b)
+                    '- ' + smaritfy(a),
+                    '+ ' + smaritfy(b)
                 ],
             });
             return false;
@@ -205,7 +206,10 @@ let t = {
 }
 
 setImmediate(async _ => {
-    //console.log("aqa - starting tests");
+    //console.log("aqa - starting tests", args);
+    let isVerbose = args.includes('--verbose');
+    const startMs = +new Date;
+
     let fails = 0;
     // Run tests
     for(let test of tests) {
@@ -213,9 +217,17 @@ setImmediate(async _ => {
         let errorMessage = null;
         let caughtException = null;
         let testErrorLine = '';
+        let logs = [];
+
+        let localT = Object.assign(t);
+        localT.log = (...args) => logs.push(args);
+
+        if (isVerbose) {
+            console.log(`Running test: "${test.name}"`);
+        }
 
         try {
-            await test.fn(t);
+            await test.fn(localT);
         } catch(e) {
             caughtException = e;
             fails++;
@@ -225,17 +237,32 @@ setImmediate(async _ => {
             errorMessage = e.toString();// + ' \n' + getCallerFromStack(e);           
         }
 
+        if (logs.length > 0) {
+            //console.log(`[Log output for "${test.name}":]`);
+            logs.forEach(args => console.log(...args))
+        }
+
         if(ok) {
             //console.log(`Success: "${test.name}"`);
+            if (isVerbose) {
+                console.log(common.makeGreen('OK'));
+            }            
         } else {
-            console.error(common.makeRed(`FAILED: `),`"${test.name}" @ ${testErrorLine}\n${errorMessage}`);
+            console.error(common.makeRed(`FAILED: `), `"${test.name}" @ ${testErrorLine}\n${errorMessage}`);
+            console.error('');
+        }
+
+        if (isVerbose) {
+            console.log('');
         }
     }
 
+    const elapsedMs = +new Date - startMs;
+
     if(fails === 0) {
-        console.log(common.makeGreen(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`))
+        console.log(common.makeGreen(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`), common.makeGray(`(${common.humanTime(elapsedMs)})`) )
     } else {
-        console.error(common.makeRed(` ${fails} test failed.`))
+        console.error(common.makeRed(` ${fails} test failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`) )
         process.exit(1);
     }
 })
