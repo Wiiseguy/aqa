@@ -35,15 +35,20 @@ function smaritfy(o) {
     return JSON.stringify(o);
 }
 
+function quoteIfString(s) {
+    if (typeof s === 'string') return `"${s}"`;
+    return s;
+}
+
 let t = {
     is(actual, expected, message = "") {
         if (!Object.is(actual, expected)) {
-            throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`);
+            throw new Error(`Expected ${quoteIfString(expected)}, got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
         }
     },
     not(actual, expected, message = "") {
         if (Object.is(actual, expected)) {
-            throw new Error(`Expected something other than ${expected}, but got ${actual} ${prefixMessage(message)}`);
+            throw new Error(`Expected something other than ${quoteIfString(expected)}, but got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
         }
     },
     deepEqual(actual, expected, message = "", _equality = false) {
@@ -84,6 +89,7 @@ let t = {
                 // Detect extra properties in the expected object, not found in actual
                 for (var p in b) {
                     if (b.hasOwnProperty(p) && typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
+                        path.push(p);
                         path.push({
                             differences: [
                                 '+ ' + smaritfy(b[p])
@@ -109,7 +115,7 @@ let t = {
 
         if (equal === _equality) {
             if (equal === true) {
-                throw new Error(`No difference between actual and expected. ${prefixMessage(message)}`);
+                throw new Error(`No difference between actual and expected. ${prefixMessage(message)}`.trim());
             } else {
                 //console.log(path)
                 let last = path.pop();
@@ -122,7 +128,7 @@ let t = {
                     if (Number.isFinite(+p)) return `[${p}]`;
                     return pi > 0 ? '.' + p : p;
                 }).join('') || '(root)';
-                throw new Error(`Difference found at:\nPath: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`);
+                throw new Error(`Difference found at:\nPath: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`.trim());
             }
         }
     },
@@ -132,13 +138,13 @@ let t = {
     true(actual, message = "") {
         expected = true;
         if (actual !== expected) {
-            throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`);
+            throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
         }
     },
     false(actual, message = "") {
         expected = false;
         if (actual !== expected) {
-            throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`);
+            throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
         }
     },
     throws(fn, opts, message = "") {
@@ -156,12 +162,12 @@ let t = {
         if (caughtException) {
             if (opts.instanceOf) {
                 if (!(caughtException instanceof opts.instanceOf)) {
-                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message, '\n')}`);
+                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message, '\n')}`.trim());
                 }
             }
             return caughtException;
         }
-        throw new Error(`Expected an exception ${prefixMessage(message)}`);
+        throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
     },
     notThrows(fn, message = "") {
         try {
@@ -169,7 +175,7 @@ let t = {
                 fn();
             }
         } catch (e) {
-            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`);
+            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
     },
     async throwsAsync(fn, opts, message = "") { // TODO: SPOD with throws?
@@ -187,12 +193,12 @@ let t = {
         if (caughtException) {
             if (opts.instanceOf) {
                 if (!(caughtException instanceof opts.instanceOf)) {
-                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message)}`);
+                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message)}`.trim());
                 }
             }
             return caughtException;
         }
-        throw new Error(`Expected an exception ${prefixMessage(message)}`);
+        throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
     },
     async notThrowsAsync(fn, message = "") {
         try {
@@ -200,7 +206,7 @@ let t = {
                 await fn();
             }
         } catch (e) {
-            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`);
+            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
     },
 }

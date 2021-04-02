@@ -8,7 +8,7 @@ test('Test should-fail', async t => {
         await exec(`node cli tests/self/should-fail`);
     } catch(e) {
         t.true(!!e.stderr);
-        t.true(e.stderr.includes('Error: Expected true, got 0'));
+        t.true(e.stderr.includes('Error: Expected true, got false'));
     }
 })
 

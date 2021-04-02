@@ -81,25 +81,27 @@ test('Async test', async t => {
 })
 
 test('Async fail test', async t => {
-    let e = await t.throwsAsync(async _ => { 
+    let e = await t.throwsAsync(async _ => {
         await delayFail(1);
     });
-    await t.throwsAsync(async _ => { 
+    await t.throwsAsync(async _ => {
         await delayFail(1);
     }, { instanceOf: TypeError });
-    
+
     t.true(e instanceof TypeError);
     t.is(e.message, 'delayFail');
 
     t.notThrowsAsync(async _ => {
-        
+
     });
-})
+});
+
+
 
 test('Log test', async t => {
-    console.log("Hello", 1, 2, "arg3")
+    //console.log("Hello", 1, 2, "arg3")
 })
 
 test('Log test 2', async t => {
-    t.log("Hello", 1, 2, "arg3");
+    //t.log("Hello", 1, 2, "arg3");
 })
