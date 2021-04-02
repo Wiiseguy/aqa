@@ -87,9 +87,9 @@ async function watchFiles() {
 
     // Watch test files
     testsFiles.forEach(tf => {
-        fs.watch(tf, (...args) => {
+        fs.watch(tf, (type, fileName) => {
             if (isVerbose) {
-                console.log('Watch triggered for test file:', ...args);
+                console.log('Watch triggered for test file:', type, fileName);
             }
             requestRun(tf);
         })
@@ -97,18 +97,22 @@ async function watchFiles() {
 
     // Watch non-test files and simply run all tests when these change
     nonTestFiles.forEach(ntf => {
-        fs.watch(ntf, (...args) => {
+        fs.watch(ntf, (type, fileName) => {
+            let ext = path.extname(fileName);
+            let base = path.basename(fileName, ext);
             if (isVerbose) {
-                console.log('Watch triggered for non-test file:', ...args);
+                console.log('Watch triggered for non-test file:', type, fileName);
             }
-            testsFiles.forEach(tf => requestRun(tf));
+
+            let relevantTestFiles = testsFiles.filter(tf => path.basename(tf).startsWith(base));
+            relevantTestFiles.forEach(tf => requestRun(tf));
         })
     })
 
     console.log("[watch] aqa - watcher active, waiting for file changes...");
 
     // Initial run
-    testsFiles.forEach(tf => requestRun(tf));
+    //testsFiles.forEach(tf => requestRun(tf));
 }
 
 async function runTests(filesToTest, autoFilter = true) {
@@ -122,7 +126,7 @@ async function runTests(filesToTest, autoFilter = true) {
     testsFiles.forEach(tf => {
         tasks.push({
             name: tf,
-            exec: _ => exec(`node ${tf} ${isVerbose ? '--verbose' : ''}`),
+            exec: _ => exec(`node ${tf} --cli ${isVerbose ? '--verbose' : ''}`),
             result: null
         });
     });
@@ -158,11 +162,12 @@ async function runTests(filesToTest, autoFilter = true) {
             let lastLine = getLastLine(result.stdout);
             numOk += extractNumTests(lastLine);
         }
-
-        if (isVerbose) {
+        
+        let relevantOutput = withoutLastLine(result.stdout);
+        if (relevantOutput) {
             console.log(`[${m.name}]`);
-            console.log(result.stdout);
-        }
+            console.log(relevantOutput);
+        }        
     });
 
 
@@ -201,7 +206,7 @@ function getLastLine(str) {
 function withoutLastLine(str) {
     str = str.trimEnd();
     let lastNl = str.lastIndexOf('\n');
-    if (lastNl === -1) return str;
+    if (lastNl === -1) return '';
     return str.substr(0, lastNl);
 }
 
