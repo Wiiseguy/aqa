@@ -77,8 +77,7 @@ async function watchFiles() {
         }
         clearTimeout(requestTimeout);
         requestTimeout = setTimeout(_ => {
-            console.log('');
-            console.log('');
+            console.log(' ');
             console.log("[watch] Running tests for:", requested.map(r => path.basename(r)).join(', '));
             runTests(requested);
             requested.length = 0;
@@ -135,6 +134,7 @@ async function runTests(filesToTest, autoFilter = true) {
     for (let task of tasks) {
         try {
             task.result = await task.exec();
+
         } catch (e) {
             task.result = e;
         }
@@ -147,6 +147,8 @@ async function runTests(filesToTest, autoFilter = true) {
     tasks.forEach((m, i) => {
         let result = m.result;
 
+        let relevantOutput = result.stdout;
+
         if (result.code === 1) {
             let lastLine = getLastLine(result.stderr);
             let numTests = extractNumTests(lastLine);
@@ -158,16 +160,16 @@ async function runTests(filesToTest, autoFilter = true) {
                 failed.push({ name: m.name, result })
             }
         }
-        if (result.stdout) {
+        else if (result.stdout) {
             let lastLine = getLastLine(result.stdout);
             numOk += extractNumTests(lastLine);
+            relevantOutput = withoutLastLine(result.stdout);
         }
-        
-        let relevantOutput = withoutLastLine(result.stdout);
+
         if (relevantOutput) {
             console.log(`[${m.name}]`);
             console.log(relevantOutput);
-        }        
+        }
     });
 
 
@@ -182,15 +184,15 @@ async function runTests(filesToTest, autoFilter = true) {
         failed.forEach(f => {
             //console.log(f.result.stdout);
             if (f.fatal) {
-                console.error(common.makeRed("Fatal error:"), f.result.stderr)
+                console.log(common.makeRed("Fatal error:"), f.result.stderr)
             } else {
                 console.log('  ', common.makeGray(path.relative(cwd, f.name) + ':'));
-                console.error(withoutLastLine(f.result.stderr));
+                console.log(withoutLastLine(f.result.stderr));
             }
-            console.log();
+            console.log(' ');
         });
 
-        console.error(common.makeRed(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+        console.log(common.makeRed(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
     }
 
     return { failed };

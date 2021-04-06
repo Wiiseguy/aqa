@@ -3,6 +3,8 @@
 */
 const common = require("./common");
 const [, , ...args] = process.argv;
+const testScriptFilename = process.mainModule.filename;
+const thisFilename = __filename;
 
 let tests = [];
 
@@ -16,12 +18,28 @@ aqa.ignore = Symbol('aqa_ignore');
 
 function getCallerFromStack(e) {
     let stack = e.stack;
+
+    if (!stack.includes(testScriptFilename)) {
+        return stack;
+    }
     stack = stack.replace(e.message, ''); // Stack repeats the message
-    let lines = stack.split('\n').map(s => s.trim()).slice(2);
-    let probableCause = lines[0];
+    let lines = stack.split('\n').map(s => s.trim());
+    let probableCause = lines.find(l => l.includes(testScriptFilename));
     let path = probableCause.split('\\').reverse()[0];
     path = path.substr(0, path.length - 1);
     return path;
+}
+
+function getSimplifiedStack(e) {
+    let stack = e.stack;
+    stack = stack.replace(e.message, ''); // Stack repeats the message
+    let lines = stack
+        .split('\n')
+        .slice(1)
+        //.map(s => s.trim())
+        .filter(s => !s.includes(thisFilename));
+
+    return lines.join('\n');
 }
 
 function prefixMessage(message, prefix) {
@@ -117,7 +135,6 @@ let t = {
             if (equal === true) {
                 throw new Error(`No difference between actual and expected. ${prefixMessage(message)}`.trim());
             } else {
-                //console.log(path)
                 let last = path.pop();
                 let diff = [];
                 if (last.differences) {
@@ -255,11 +272,12 @@ setImmediate(async _ => {
             }
         } else {
             console.error(common.makeRed(`FAILED: `), `"${test.name}" @ ${testErrorLine}\n${errorMessage}`);
+            console.error(common.makeGray(getSimplifiedStack(caughtException)));
             console.error('');
         }
 
         if (isVerbose) {
-            console.log('');
+            console.log(' ');
         }
     }
 
