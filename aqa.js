@@ -3,7 +3,7 @@
 */
 const common = require("./common");
 const [, , ...args] = process.argv;
-const testScriptFilename = process.mainModule.filename;
+const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
 const thisFilename = __filename;
 
 let tests = [];
