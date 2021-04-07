@@ -38,6 +38,13 @@ Then, to run all your tests: `npm run test`
 
 All files anywhere in your package's directory (and subdirectories) that match `*.test.js` or `*.tests.js` will be ran.
 
+If your test files are named differently, for instance *.spec.js, you can write your test script like this:
+```json
+"scripts": {
+  "test": "aqa *.spec.js"
+},
+```
+
 #### Watch mode
 To automatically run tests whenever you modify your files, aqa has a watch mode. If you desire this functionality, add a new script to your package.json:
 ```json
@@ -47,6 +54,11 @@ To automatically run tests whenever you modify your files, aqa has a watch mode.
 },
 ```
 To start the watch script, run `npm run test:watch`.
+
+Like with the `test` script, you can watch files other than `*.test.js`:
+```json
+"test:watch": "aqa *.spec.js --watch"
+```
 
 ### Assertion
 These assertion methods are currently supported:
@@ -63,6 +75,7 @@ t.deepEqual(actual, {
   c: test.ignore
 })
 ```
+Differences are reported with a minus `-` for actual values and plus `+` for expected values.
 #### `t.notDeepEqual(actual, expected, message?)`
 Asserts that `actual` is **not** deeply equal to `expected`.
 #### `t.true(value, message?)`
@@ -105,6 +118,8 @@ await t.throws(async _ => {
 Asserts that `fn` does not throw an exception.
 #### `t.notThrowsAsync(fn, message?)`
 Asserts that async function or Promise `fn` does not throw an exception.
+#### `t.log(message, ...arguments?)`
+Not actually an assertion method, but helps you easily find for which test method you've logged information. Should be used instead of `console.log`.
 
 ### Work in progress:
-- Configuration (globs, paths, etc.)
+- Configuration in (nearest) package.json
