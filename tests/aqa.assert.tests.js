@@ -36,7 +36,6 @@ test('All', t => {
         }
     );
 
-    t.deepEqual(11, 10);
     t.deepEqual(new Date(2000, 1, 1), new Date(2000, 1, 1));
     t.deepEqual(new Set([1, 2, 3]), new Set([1, 2, 3]))
 
