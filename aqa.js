@@ -48,7 +48,7 @@ function prefixMessage(message, prefix) {
     return '';
 }
 
-function smaritfy(o) {
+function smartify(o) {
     if (typeof o === 'number' && isNaN(o)) return 'NaN';
     return JSON.stringify(o);
 }
@@ -71,6 +71,15 @@ let t = {
     },
     deepEqual(actual, expected, message = "", _equality = false) {
         const path = [];
+        const addDiff = (path, a, b) => path.push({
+            differences: [
+                '- ' + a,
+                '+ ' + b
+                //common.makeGray('- ') + a,
+                //common.makeGray('+ ') + b
+            ],
+        });
+
         const compare = (a, b, path) => {
             if (b === aqa.ignore) {
                 return true;
@@ -81,19 +90,25 @@ let t = {
             }
             // Check deeper equality
             if (typeof a === "object" && typeof b === "object" && a != null && b != null) {
-                if (a instanceof Date && b instanceof Date) {
-                    return +a === +b;
-                }
-                if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length) {
-                    path.push({
-                        differences: [
-                            '- ' + smaritfy(a),
-                            '+ ' + smaritfy(b)
-                        ],
-                    });
+                if (a instanceof Date && b instanceof Date && +a !== +b) {
+                    addDiff(path, a.toISOString(), b.toISOString());
                     return false;
                 }
-                for (var p in a) {
+                if (a instanceof RegExp && b instanceof RegExp && a.toString() !== b.toString()) {
+                    addDiff(path, a, b);
+                    return false;
+                }
+                if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length) {
+                    addDiff(path, smartify(a), smartify(b));
+                    return false;
+                }
+
+                if (Symbol.iterator in a && Symbol.iterator in b) {
+                    a = [...a];
+                    b = [...b];
+                }
+
+                for (let p in a) {                        
                     if (a.hasOwnProperty(p)) {
                         path.push(p);
 
@@ -105,14 +120,10 @@ let t = {
                     }
                 }
                 // Detect extra properties in the expected object, not found in actual
-                for (var p in b) {
+                for (let p in b) {
                     if (b.hasOwnProperty(p) && typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
                         path.push(p);
-                        path.push({
-                            differences: [
-                                '+ ' + smaritfy(b[p])
-                            ],
-                        });
+                        addDiff(path, 'undefined', smartify(b[p]));
                         return false;
                     }
                 }
@@ -120,19 +131,14 @@ let t = {
                 return true;
             }
 
-            path.push({
-                differences: [
-                    '- ' + smaritfy(a),
-                    '+ ' + smaritfy(b)
-                ],
-            });
+            addDiff(path, smartify(a), smartify(b));
             return false;
-        }
+        };
 
         let equal = compare(actual, expected, path);
 
         if (equal === _equality) {
-            if (equal === true) {
+            if (_equality === true) {
                 throw new Error(`No difference between actual and expected. ${prefixMessage(message)}`.trim());
             } else {
                 let last = path.pop();
@@ -145,7 +151,7 @@ let t = {
                     if (Number.isFinite(+p)) return `[${p}]`;
                     return pi > 0 ? '.' + p : p;
                 }).join('') || '(root)';
-                throw new Error(`Difference found at:\nPath: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`.trim());
+                throw new Error(`Difference found at path: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`.trim());
             }
         }
     },

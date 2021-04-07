@@ -1,5 +1,76 @@
-const test = require('../aqa')
+const test = require('../aqa');
 
+
+test('All', t => {
+    t.is(1 + 1, 2);
+    t.not(1 + 1, 3);
+    t.true(1 === 1);
+    t.false(1 === 2);
+
+    t.deepEqual({
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1, 2],
+            ad: [{
+                aaa: 1
+            }],
+            ae: NaN,
+            af: undefined,
+            ag: { ok: true }
+        },
+        b: [1, 2, 3]
+    },
+        {
+            a: {
+                aa: 1,
+                ab: 2,
+                ac: [1, 2],
+                ad: [{
+                    aaa: 1
+                }],
+                ae: NaN,
+                ag: test.ignore
+            },
+            b: [1, 2, 3]
+        }
+    );
+
+    t.deepEqual(11, 10);
+    t.deepEqual(new Date(2000, 1, 1), new Date(2000, 1, 1));
+    t.deepEqual(new Set([1, 2, 3]), new Set([1, 2, 3]))
+
+    t.notDeepEqual({
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1, 2],
+            ad: [{
+                aaa: 1
+            }]
+        },
+        b: [1, 2, 3]
+    },
+        {
+            a: {
+                aa: 1,
+                ab: 2,
+                ac: [1, 2],
+                ad: [{
+                    aaa: 100000000
+                }]
+            },
+            b: [1, 2, 3]
+        });
+
+    t.notDeepEqual(new Date(2021, 1, 1), new Date(2000, 1, 1));
+    t.notDeepEqual(new Set([1, 2, 3]), new Set([1, 2, 4]))
+
+    t.throws(_ => { throw new TypeError() });
+    t.notThrows(_ => { /* nothing */ });
+    const error = t.throws(() => { throw new TypeError() }, { instanceOf: TypeError });
+    t.true(error instanceof TypeError);
+})
 
 test('Assert fail messages', async t => {
     // true
@@ -53,19 +124,19 @@ test('Assert fail messages', async t => {
     try {
         t.deepEqual({ a: 1 }, { a: 2 });
     } catch (e) {
-        t.is(e.message, "Difference found at:\nPath: a\n- 1\n+ 2")
+        t.is(e.message, "Difference found at path: a\n- 1\n+ 2")
     }
 
     try {
         t.deepEqual({ a: 1 }, { a: 1, b: 2 });
     } catch (e) {
-        t.is(e.message, "Difference found at:\nPath: b\n+ 2")
+        t.is(e.message, "Difference found at path: b\n- undefined\n+ 2")
     }
 
     try {
         t.deepEqual({ a: [1, 2, 3] }, { a: [1, 2, 4] });
     } catch (e) {
-        t.is(e.message, "Difference found at:\nPath: a[2]\n- 3\n+ 4")
+        t.is(e.message, "Difference found at path: a[2]\n- 3\n+ 4")
     }
 
     // notDeepEqual

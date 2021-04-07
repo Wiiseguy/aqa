@@ -30,7 +30,7 @@ function glob(s) {
 }
 
 function humanTime(ms) {
-    if (ms > 1000) return Math.round(ms / 100) / 10 + 's';
+    if (ms >= 1000) return (ms / 1000).toFixed(1) + 's';
     return ms + 'ms';
 }
 
@@ -38,6 +38,7 @@ module.exports = {
     makeRed,
     makeGreen,
     makeGray,
+    escapeRegExp,
     glob,
     humanTime
 }
