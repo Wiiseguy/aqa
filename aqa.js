@@ -80,18 +80,24 @@ let t = {
             ],
         });
 
+        const bothNaN = (a, b) => {
+            if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
+                return isNaN(a) && isNaN(b);
+            }
+        };
+
         const compare = (a, b, path) => {
             if (b === aqa.ignore) {
                 return true;
             }
             // Check base equality
-            if (a == b || (a === null && b === null) || (typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b))) {
+            if (Object.is(a, b) || (a === null && b === null) || bothNaN(a, b)) {
                 return true;
             }
             // Check deeper equality
             if (typeof a === "object" && typeof b === "object" && a != null && b != null) {
                 if (a instanceof Date && b instanceof Date && +a !== +b) {
-                    addDiff(path, a.toISOString(), b.toISOString());
+                    addDiff(path, a.toString(), b.toString());
                     return false;
                 }
                 if (a instanceof RegExp && b instanceof RegExp && a.toString() !== b.toString()) {
@@ -108,7 +114,7 @@ let t = {
                     b = [...b];
                 }
 
-                for (let p in a) {                        
+                for (let p in a) {
                     if (a.hasOwnProperty(p)) {
                         path.push(p);
 
