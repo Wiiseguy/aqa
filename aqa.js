@@ -49,7 +49,7 @@ function prefixMessage(message, prefix) {
 }
 
 function smartify(o) {
-    if (typeof o === 'number' && isNaN(o)) return 'NaN';
+    if (typeof o === 'number') return o.toString();
     return JSON.stringify(o);
 }
 
