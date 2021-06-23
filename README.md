@@ -36,7 +36,18 @@ To run multiple tests and integrate CI testing with your package, you need to ch
 ```
 Then, to run all your tests: `npm run test`
 
-All files anywhere in your package's directory (and subdirectories) that match `*.test.js` or `*.tests.js` will be ran.
+All files anywhere in your package's directory (and subdirectories, excluding `node_modules` and directories that start with a single `_` ) that match the following patterns will be ran: 
+```
+test.js
+tests.js
+*.test.js
+*.tests.js
+*/test-*.js
+*.spec.js
+**/test/*.js
+**/tests/*.js
+**/__tests__/*.js
+```
 
 If your test files are named differently, for instance *.spec.js, you can write your test script like this:
 ```json

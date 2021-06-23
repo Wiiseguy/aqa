@@ -14,7 +14,6 @@ const cwd = process.cwd();
 // RegExps
 const reSkip = /\\\.|\\node_modules/;
 const reJsFile = /.js$/;
-const reTestFile = /tests?.js$/;
 const reNumTestExtract = /(\d+) test/;
 
 let isVerbose = false;
@@ -29,7 +28,6 @@ async function main() {
     isVerbose = args.includes('--verbose');
     let isWatch = args.includes('--watch');
 
-
     if (isWatch) {
         // Watch files and run tests when changed
         watchFiles();
@@ -37,7 +35,7 @@ async function main() {
         if (arg0) {
             // Param is file/glob
             let allFiles = await getFiles(cwd);
-            let reGlob = common.glob(arg0);
+            let reGlob = common.microMatch(arg0);
             let testFiles = [];
             if (typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
                 testFiles.push(arg0);
@@ -54,7 +52,8 @@ async function main() {
         } else {
             // Test all files
             let allFiles = await getFiles(cwd);
-            let result = await runTests(allFiles);
+            let testsFiles = filterTestFiles(allFiles);
+            let result = await runTests(testsFiles);
             if (result.failed.length > 0) {
                 process.exit(1);
             }
@@ -65,7 +64,7 @@ async function main() {
 
 async function watchFiles() {
     let allFiles = await getFiles(cwd);
-    let testsFiles = allFiles.filter(f => f.match(reTestFile));
+    let testsFiles = filterTestFiles(allFiles);
     let nonTestFiles = allFiles.filter(f => f.match(reJsFile) && !testsFiles.includes(f));
 
     // Collect & debounce
@@ -83,6 +82,8 @@ async function watchFiles() {
             requested.length = 0;
         }, 250);
     };
+
+    const requestRuns = files => files.forEach(requestRun);
 
     // Watch test files
     testsFiles.forEach(tf => {
@@ -104,7 +105,12 @@ async function watchFiles() {
             }
 
             let relevantTestFiles = testsFiles.filter(tf => path.basename(tf).startsWith(base));
-            relevantTestFiles.forEach(tf => requestRun(tf));
+            if(relevantTestFiles.length > 0) {
+                requestRuns(relevantTestFiles);
+            } else {
+                // Test all files
+                requestRuns(testsFiles);
+            }
         })
     })
 
@@ -114,12 +120,10 @@ async function watchFiles() {
     //testsFiles.forEach(tf => requestRun(tf));
 }
 
-async function runTests(filesToTest, autoFilter = true) {
+async function runTests(filesToTest) {
+    //console.log("Running:", filesToTest)
     const startMs = +new Date;
     let testsFiles = filesToTest;
-    if (autoFilter) {
-        testsFiles = testsFiles.filter(f => f.match(reTestFile));
-    }
 
     let tasks = [];
     testsFiles.forEach(tf => {
@@ -198,6 +202,9 @@ async function runTests(filesToTest, autoFilter = true) {
     return { failed };
 }
 
+function filterTestFiles(files) {
+    return common.filterFiles(files, common.REGEXP_TEST_FILES, common.REGEXP_IGNORE_FILES);
+}
 
 function getLastLine(str) {
     str = str.trimEnd();

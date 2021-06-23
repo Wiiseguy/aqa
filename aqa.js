@@ -49,7 +49,7 @@ function prefixMessage(message, prefix) {
 }
 
 function smartify(o) {
-    if (typeof o === 'number') return o.toString();
+    if (typeof o === 'number' || o instanceof RegExp) return o.toString();
     return JSON.stringify(o);
 }
 

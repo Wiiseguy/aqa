@@ -23,12 +23,98 @@ test('escapeRegExp', async t => {
     t.is(sut('-[\]{}()*+!<=:?.\/\\^$|#\s,'), "\\-\\[\\]\\{\\}\\(\\)\\*\\+\\!\\<\\=\\:\\?\\.\\/\\\\\\^\\$\\|\\#s\\,");
 })
 
-test('glob', async t => {
-    let sut = common.glob;
+test('microMatch', async t => {
+    let sut = common.microMatch;
     t.deepEqual(sut('abc'), "abc");
+    t.deepEqual(sut('abc.xyz'), "abc.xyz");
+    t.deepEqual(sut('abc?'), /^abc?$/);
+    t.deepEqual(sut('abc+'), /^abc+$/);
+    t.deepEqual(sut('abc(xyz)+'), /^abc(xyz)+$/);
+    t.deepEqual(sut('abc(xyz)*'), /^abc(xyz)*$/);    
+    t.deepEqual(sut('a-z'), "a-z");    
+    t.deepEqual(sut('[a-z]'), /^[a-z]$/);
+    t.deepEqual(sut('[^a-z]'), /^[^a-z]$/);
+    t.deepEqual(sut('[!a-z]'), /^[^a-z]$/);
     t.deepEqual(sut('abc*'), /^abc\S+$/);
     t.deepEqual(sut('*tests\\file.js'), /^\S+tests\\file\.js$/);
     t.deepEqual(sut('*tests\\*.tests.js'), /^\S+tests\\\S+\.tests\.js$/);
+    t.deepEqual(sut('tests?.js'), /^tests?\.js$/);
+    t.deepEqual(sut('*/_([^_])*/*'), /^\S+\\_([^_])*\\\S+$/);
+})
+
+test('filterFiles - custom', async t => {
+    let sut = common.filterFiles;
+    let files = [
+        'C:\\DEV\\something-else.js',
+        'C:\\DEV\\test.js',
+        'C:\\DEV\\tests.js',
+        'C:\\DEV\\a.tests.js',
+    ];
+    let testFiles = files.slice(1);
+    t.deepEqual(sut(files, [
+        common.microMatch("tests?.js")
+    ]), []);
+    t.deepEqual(sut(files, [
+        common.microMatch("*tests?.js")
+    ]), testFiles);
+    t.deepEqual(sut(files, [
+        common.microMatch("**tests?.js")
+    ]), testFiles);
+    t.deepEqual(sut(files, [
+        common.microMatch("**/*tests?.js")
+    ]), testFiles);
+})
+
+test('filterFiles - custom - multi', async t => {
+    let sut = common.filterFiles;
+    let files = [
+        'C:\\DEV\\something-else.js',
+        'C:\\DEV\\test.js',
+        'C:\\DEV\\tests.js',
+        'C:\\DEV\\a.spec.js',
+    ];
+    let testFiles = files.slice(1);
+    t.deepEqual(sut(files, [
+        common.microMatch("*tests?.js"),
+        common.microMatch("*spec.js")
+    ]), testFiles);
+})
+
+test('filterFiles - REGEXP_TEST_FILES', async t => {
+    let sut = common.filterFiles;
+    let files = [
+        'C:\\DEV\\something.js',
+        'C:\\DEV\\test.js',
+        'C:\\DEV\\test-something.js',
+        'C:\\DEV\\a.test.js',
+        'C:\\DEV\\a.tests.js',
+        'C:\\DEV\\a.spec.js',
+        'C:\\DEV\\test\\a.js',
+        'C:\\DEV\\tests\\b.js',
+        'C:\\DEV\\__tests__\\c.js',
+    ];
+    let testFiles = files.slice(1);
+
+    t.deepEqual(sut(files, common.REGEXP_TEST_FILES), testFiles);
+})
+
+test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
+    let sut = common.filterFiles;
+    let files = [
+        'C:\\DEV\\something.js',
+        'C:\\DEV\\_ignore\\test.js',
+        'C:\\DEV\\test.js',
+        'C:\\DEV\\test-something.js',
+        'C:\\DEV\\a.test.js',
+        'C:\\DEV\\a.tests.js',
+        'C:\\DEV\\a.spec.js',
+        'C:\\DEV\\test\\a.js',
+        'C:\\DEV\\tests\\b.js',
+        'C:\\DEV\\__tests__\\c.js',
+    ];
+    let testFiles = files.slice(2);
+
+    t.deepEqual(sut(files, common.REGEXP_TEST_FILES, common.REGEXP_IGNORE_FILES), testFiles);
 })
 
 test('humanTime', async t => {
