@@ -114,20 +114,18 @@ let t = {
                     b = [...b];
                 }
 
-                for (let p in a) {
-                    if (a.hasOwnProperty(p)) {
-                        path.push(p);
-
-                        if (!compare(a[p], b[p], path)) {
-                            return false;
-                        }
-
-                        path.pop();
+                const aProperties = Object.getOwnPropertyNames(a);
+                for (let p of aProperties) {
+                    path.push(p);
+                    if (!compare(a[p], b[p], path)) {
+                        return false;
                     }
+                    path.pop();
                 }
                 // Detect extra properties in the expected object, not found in actual
-                for (let p in b) {
-                    if (b.hasOwnProperty(p) && typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
+                const bProperties = Object.getOwnPropertyNames(b);
+                for (let p of bProperties) {
+                    if (typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
                         path.push(p);
                         addDiff(path, 'undefined', smartify(b[p]));
                         return false;

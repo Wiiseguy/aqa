@@ -39,6 +39,10 @@ test('All', t => {
     t.deepEqual(new Date(2000, 1, 1), new Date(2000, 1, 1));
     t.deepEqual(new Set([1, 2, 3]), new Set([1, 2, 3]))
 
+    t.notDeepEqual([1,2,3], [1,2,4]);
+    t.notDeepEqual([1,2,3], [1,2,3,4]);
+    t.notDeepEqual({atest:1}, {atest:2});
+
     t.notDeepEqual({
         a: {
             aa: 1,
@@ -50,17 +54,17 @@ test('All', t => {
         },
         b: [1, 2, 3]
     },
-        {
-            a: {
-                aa: 1,
-                ab: 2,
-                ac: [1, 2],
-                ad: [{
-                    aaa: 100000000
-                }]
-            },
-            b: [1, 2, 3]
-        });
+    {
+        a: {
+            aa: 1,
+            ab: 2,
+            ac: [1, 2],
+            ad: [{
+                aaa: 100000000
+            }]
+        },
+        b: [1, 2, 3]
+    });
 
     t.notDeepEqual(new Date(2021, 1, 1), new Date(2000, 1, 1));
     t.notDeepEqual(new Set([1, 2, 3]), new Set([1, 2, 4]))
@@ -198,3 +202,14 @@ test('Assert fail messages', async t => {
     }
 
 })
+
+test('Getters & deepEqual', t => {
+    let o = {};
+
+    Object.defineProperty(o, 'got', { get() { return 9000; }});
+
+    t.is(o.got, 9000);
+    t.deepEqual(o, {
+        got: 9000
+    })
+});
