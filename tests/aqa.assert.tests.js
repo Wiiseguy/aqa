@@ -7,6 +7,10 @@ test('All', t => {
     t.true(1 === 1);
     t.false(1 === 2);
 
+    t.is(0, -0);
+    t.deepEqual(0, -0);
+    t.deepEqual([0], [-0]);
+
     t.deepEqual(
         {
             a: {

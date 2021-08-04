@@ -71,14 +71,19 @@ function getEnumerablePropertyNames(o) {
     return getEnumerableProperties(o).map(p => p.name);
 }
 
+function areEqual(a, b) {
+    if(typeof a === 'number' && typeof b === 'number' && a === b) return true;
+    return Object.is(a,b);
+}
+
 let t = {
     is(actual, expected, message = "") {
-        if (!Object.is(actual, expected)) {
+        if (!areEqual(actual, expected)) {
             throw new Error(`Expected ${quoteIfString(expected)}, got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
         }
     },
     not(actual, expected, message = "") {
-        if (Object.is(actual, expected)) {
+        if (areEqual(actual, expected)) {
             throw new Error(`Expected something other than ${quoteIfString(expected)}, but got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
         }
     },
@@ -104,7 +109,7 @@ let t = {
                 return true;
             }
             // Check base equality
-            if (Object.is(a, b) || (a === null && b === null) || bothNaN(a, b)) {
+            if (areEqual(a, b) || (a === null && b === null) || bothNaN(a, b)) {
                 return true;
             }
             // Check deeper equality
