@@ -210,6 +210,16 @@ test('Getters & deepEqual', t => {
 
     t.is(o.got, 9000);
     t.deepEqual(o, {
-        got: 9000
+    })
+});
+
+
+test('Non-enumerable properties & deepEqual', t => {
+    let o = {};
+
+    Object.defineProperty(o, 'got', { value: 9000, enumerable: false });
+
+    t.is(o.got, 9000);
+    t.deepEqual(o, {
     })
 });

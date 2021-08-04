@@ -58,6 +58,19 @@ function quoteIfString(s) {
     return s;
 }
 
+function getObjectProperties(o) {
+    return Object.entries(Object.getOwnPropertyDescriptors(o))
+        .map(([key, value]) => ({ name: key, ...value }));
+}
+
+function getEnumerableProperties(o) {
+    return getObjectProperties(o).filter(p => p.enumerable);
+}
+
+function getEnumerablePropertyNames(o) {
+    return getEnumerableProperties(o).map(p => p.name);
+}
+
 let t = {
     is(actual, expected, message = "") {
         if (!Object.is(actual, expected)) {
@@ -114,7 +127,7 @@ let t = {
                     b = [...b];
                 }
 
-                const aProperties = Object.getOwnPropertyNames(a);
+                const aProperties = getEnumerablePropertyNames(a);
                 for (let p of aProperties) {
                     path.push(p);
                     if (!compare(a[p], b[p], path)) {
@@ -123,7 +136,7 @@ let t = {
                     path.pop();
                 }
                 // Detect extra properties in the expected object, not found in actual
-                const bProperties = Object.getOwnPropertyNames(b);
+                const bProperties = getEnumerablePropertyNames(b);
                 for (let p of bProperties) {
                     if (typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
                         path.push(p);
