@@ -138,7 +138,7 @@ let t = {
                 // Detect extra properties in the expected object, not found in actual
                 const bProperties = getEnumerablePropertyNames(b);
                 for (let p of bProperties) {
-                    if (typeof a[p] === 'undefined' && typeof b[p] !== 'undefined') {
+                    if (!aProperties.includes(p) && typeof b[p] !== 'undefined') {
                         path.push(p);
                         addDiff(path, 'undefined', smartify(b[p]));
                         return false;

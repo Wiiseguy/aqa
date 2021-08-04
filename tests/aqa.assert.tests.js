@@ -7,20 +7,21 @@ test('All', t => {
     t.true(1 === 1);
     t.false(1 === 2);
 
-    t.deepEqual({
-        a: {
-            aa: 1,
-            ab: 2,
-            ac: [1, 2],
-            ad: [{
-                aaa: 1
-            }],
-            ae: NaN,
-            af: undefined,
-            ag: { ok: true }
+    t.deepEqual(
+        {
+            a: {
+                aa: 1,
+                ab: 2,
+                ac: [1, 2],
+                ad: [{
+                    aaa: 1
+                }],
+                ae: NaN,
+                af: undefined,
+                ag: { ok: true }
+            },
+            b: [1, 2, 3]
         },
-        b: [1, 2, 3]
-    },
         {
             a: {
                 aa: 1,
@@ -209,7 +210,8 @@ test('Getters & deepEqual', t => {
     Object.defineProperty(o, 'got', { get() { return 9000; }});
 
     t.is(o.got, 9000);
-    t.deepEqual(o, {
+    t.notDeepEqual(o, {
+        got: 1
     })
 });
 
@@ -220,6 +222,7 @@ test('Non-enumerable properties & deepEqual', t => {
     Object.defineProperty(o, 'got', { value: 9000, enumerable: false });
 
     t.is(o.got, 9000);
-    t.deepEqual(o, {
+    t.notDeepEqual(o, {
+        got: 1
     })
 });
