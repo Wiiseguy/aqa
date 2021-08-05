@@ -11,7 +11,8 @@ let tests = [];
 const throwsDefaultOpts = {};
 
 function aqa(testName, testFn) {
-    tests.push({ name: testName, fn: testFn })
+    if(tests.find(t => t.name === testName)) console.log(`${common.makeRed('WARNING')}: Duplicate test name: "${testName}"`);
+    tests.push({ name: testName, fn: testFn });    
 }
 
 aqa.ignore = Symbol('aqa_ignore');

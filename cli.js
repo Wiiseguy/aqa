@@ -166,9 +166,11 @@ async function runTests(filesToTest) {
         }
         else if (result.stdout) {
             let lastLine = getLastLine(result.stdout);
-            numOk += extractNumTests(lastLine);
-            relevantOutput = withoutLastLine(result.stdout);
+            numOk += extractNumTests(lastLine);			
+            relevantOutput = withoutLastLine(result.stdout) + '\n' + result.stderr;
         }
+		
+		relevantOutput = relevantOutput.trim();
 
         if (relevantOutput) {
             console.log(`[${m.name}]`);

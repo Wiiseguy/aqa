@@ -9,7 +9,7 @@ test('makeGreen', async t => {
     t.is(common.makeGreen('abc'), "\x1b[32mabc\x1b[0m");
 })
 
-test('makeGreen', async t => {
+test('makeGray', async t => {
     t.is(common.makeGray('abc'), "\x1b[90mabc\x1b[0m");
 })
 
