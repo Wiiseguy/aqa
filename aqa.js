@@ -1,6 +1,7 @@
 /*
     aqa - dependency-less testing
 */
+const util = require("util");
 const common = require("./common");
 const [, , ...args] = process.argv;
 const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
@@ -12,7 +13,7 @@ const throwsDefaultOpts = {};
 
 function aqa(testName, testFn) {
     if(tests.find(t => t.name === testName)) console.log(`${common.makeRed('WARNING')}: Duplicate test name: "${testName}"`);
-    tests.push({ name: testName, fn: testFn });    
+    tests.push({ name: testName, fn: testFn });   
 }
 
 aqa.ignore = Symbol('aqa_ignore');
@@ -51,7 +52,7 @@ function prefixMessage(message, prefix) {
 
 function smartify(o) {
     if (typeof o === 'number' || o instanceof RegExp) return o.toString();
-    return JSON.stringify(o);
+    return util.inspect(o);
 }
 
 function quoteIfString(s) {
