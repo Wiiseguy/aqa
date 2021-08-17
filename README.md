@@ -68,7 +68,7 @@ To start the watch script, run `npm run test:watch`.
 
 Like with the `test` script, you can watch files other than `*.test.js`:
 ```json
-"test:watch": "aqa *.spec.js --watch"
+"test:watch": "aqa *.foo.js --watch"
 ```
 
 ### Assertion
@@ -139,7 +139,7 @@ Asserts that `fn` does not throw an exception.
 #### `t.notThrowsAsync(fn, message?)`
 Asserts that async function or Promise `fn` does not throw an exception.
 #### `t.log(message, ...arguments?)`
-Not actually an assertion method, but helps you easily find for which test method you've logged information. Should be used instead of `console.log`.
+Not actually an assertion method, but helps you easily find for which test method you've logged information. Could be used instead of `console.log`.
 
 ### Work in progress:
 - Configuration in (nearest) package.json
