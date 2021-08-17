@@ -16,7 +16,14 @@ function aqa(testName, testFn) {
     tests.push({ name: testName, fn: testFn });   
 }
 
+function IgnoreExtra(value) {
+    this.value = value;
+}
+
 aqa.ignore = Symbol('aqa_ignore');
+aqa.ignoreExtra = function(value) {
+    return new IgnoreExtra(value);
+};
 
 function getCallerFromStack(e) {
     let stack = e.stack;
@@ -107,6 +114,10 @@ let t = {
         };
 
         const compare = (a, b, path) => {
+            let ignoreExtra = b instanceof IgnoreExtra;
+            if(ignoreExtra) {
+                b = b.value;
+            }
             if (b === aqa.ignore) {
                 return true;
             }
@@ -135,15 +146,18 @@ let t = {
                 }
 
                 const aProperties = getEnumerablePropertyNames(a);
+                const bProperties = getEnumerablePropertyNames(b);
+
                 for (let p of aProperties) {
+                    if(ignoreExtra && !bProperties.includes(p)) continue;
                     path.push(p);
                     if (!compare(a[p], b[p], path)) {
                         return false;
                     }
                     path.pop();
                 }
-                // Detect extra properties in the expected object, not found in actual
-                const bProperties = getEnumerablePropertyNames(b);
+
+                // Detect extra properties in the expected object, not found in actual                
                 for (let p of bProperties) {
                     if (!aProperties.includes(p) && typeof b[p] !== 'undefined') {
                         path.push(p);

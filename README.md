@@ -80,6 +80,7 @@ Asserts that `actual` is **not** equal to `notEpected`.
 #### `t.deepEqual(actual, expected, message?)`
 Asserts that `actual` is deeply equal to `expected`. `test.ignore` can be used to skip certain properties, i.e.:
 ```js
+let actual = { a: 3, b: 'ok', c: 7 }
 t.deepEqual(actual, {
   a: 3,
   b: 'ok',
@@ -87,6 +88,14 @@ t.deepEqual(actual, {
 })
 ```
 Differences are reported with a minus `-` for actual values and plus `+` for expected values.
+
+You may also use `test.ignoreExtra()` to only assert the given properties in the expected object:
+```js
+let actual = { a: 3, b: 'ok', c: 7 }
+t.deepEqual(actual, test.ignoreExtra({
+  b: 'ok',
+}))
+```
 #### `t.notDeepEqual(actual, expected, message?)`
 Asserts that `actual` is **not** deeply equal to `expected`.
 #### `t.true(value, message?)`

@@ -41,6 +41,24 @@ test('All', t => {
         }
     );
 
+    t.deepEqual(
+        {
+            a: {
+                aa: 1,
+                ab: 2,
+                ac: [1, 2],
+                ad: [{
+                    aaa: 1
+                }],
+            },
+        },
+        {
+            a: test.ignoreExtra({
+                ab: 2
+            }),
+        }
+    );
+
     t.deepEqual(new Date(2000, 1, 1), new Date(2000, 1, 1));
     t.deepEqual(new Set([1, 2, 3]), new Set([1, 2, 3]))
 
@@ -81,6 +99,8 @@ test('All', t => {
 })
 
 test('Assert fail messages', async t => {
+    let e;
+
     // true
     try {
         t.true(false);
@@ -128,24 +148,21 @@ test('Assert fail messages', async t => {
         t.is(e.message, "Expected something other than \"1\", but got \"1\"")
     }
 
-    // deepEqual
-    try {
-        t.deepEqual({ a: 1 }, { a: 2 });
-    } catch (e) {
-        t.is(e.message, "Difference found at path: a\n- 1\n+ 2")
-    }
+    // deepEqual - TODO: rewrite other try-catches to t.throws
+    e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }))
+    t.is(e.message, "Difference found at path: a\n- 1\n+ 2")    
 
-    try {
-        t.deepEqual({ a: 1 }, { a: 1, b: 2 });
-    } catch (e) {
-        t.is(e.message, "Difference found at path: b\n- undefined\n+ 2")
-    }
+    e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 1, b: 2 }))
+    t.is(e.message, "Difference found at path: b\n- undefined\n+ 2")    
 
-    try {
-        t.deepEqual({ a: [1, 2, 3] }, { a: [1, 2, 4] });
-    } catch (e) {
-        t.is(e.message, "Difference found at path: a[2]\n- 3\n+ 4")
-    }
+    e = t.throws(_ => t.deepEqual({ a: [1, 2, 3] }, { a: [1, 2, 4] }))
+    t.is(e.message, "Difference found at path: a[2]\n- 3\n+ 4")    
+
+    e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ b: 1 })))
+    t.is(e.message, "Difference found at path: b\n- 2\n+ 1")    
+
+    e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ c: 1 })))
+    t.is(e.message, "Difference found at path: c\n- undefined\n+ 1")    
 
     // notDeepEqual
     try {
