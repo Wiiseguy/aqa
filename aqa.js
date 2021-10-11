@@ -7,7 +7,11 @@ const [, , ...args] = process.argv;
 const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
 const thisFilename = __filename;
 
-let tests = [];
+const _backup = {
+	process: process
+}
+
+const tests = [];
 
 const throwsDefaultOpts = {};
 
@@ -85,7 +89,7 @@ function areEqual(a, b) {
     return Object.is(a,b);
 }
 
-let t = {
+const t = {
     is(actual, expected, message = "") {
         if (!areEqual(actual, expected)) {
             throw new Error(`Expected ${quoteIfString(expected)}, got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
@@ -303,6 +307,11 @@ setImmediate(async _ => {
             testErrorLine = getCallerFromStack(e);
             errorMessage = e.toString();// + ' \n' + getCallerFromStack(e);           
         }
+		
+		// Restore potentially overwritten critical globals
+		if(global.process !== _backup.process) {		
+			global.process = _backup.process;
+		}
 
         if (logs.length > 0) {
             console.log(`[Log output for "${test.name}":]`);
