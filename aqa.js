@@ -7,9 +7,10 @@ const [, , ...args] = process.argv;
 const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
 const thisFilename = __filename;
 
-const _backup = {
-	process: process
-}
+const _backupItems = ['process', 'console'];
+const _backup = {};
+_backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
+const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b] ) );
 
 const tests = [];
 
@@ -309,9 +310,7 @@ setImmediate(async _ => {
         }
 		
 		// Restore potentially overwritten critical globals
-		if(global.process !== _backup.process) {		
-			global.process = _backup.process;
-		}
+		_backupRestore();
 
         if (logs.length > 0) {
             console.log(`[Log output for "${test.name}":]`);
