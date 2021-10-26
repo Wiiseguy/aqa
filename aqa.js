@@ -7,6 +7,7 @@ const [, , ...args] = process.argv;
 const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
 const thisFilename = __filename;
 
+const STRING_DIFF_MAX_LINES = 3;
 const _backupItems = ['process', 'console'];
 const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
@@ -72,6 +73,25 @@ function quoteIfString(s) {
     return s;
 }
 
+function getStringDiff(a,b) {
+	let linesA = a.split('\n');
+	let linesB = b.split('\n');
+	
+	for(let i = 0; i < linesA.length; i++) {
+		let la = linesA[i];
+		let lb = linesB[i];
+		if(la !== lb) {
+			let lai = i+1 >= linesB.length ? undefined : i+STRING_DIFF_MAX_LINES;
+			let lbi = i+1 >= linesA.length ? undefined : i+STRING_DIFF_MAX_LINES;
+			return [
+				linesA.slice(i, lai).join('\n'),
+				linesB.slice(i, lbi).join('\n')
+			]
+		}
+	}
+	return ['a','b']
+}
+
 function getObjectProperties(o) {
     return Object.entries(Object.getOwnPropertyDescriptors(o))
         .map(([key, value]) => ({ name: key, ...value }));
@@ -90,6 +110,20 @@ function areEqual(a, b) {
     return Object.is(a,b);
 }
 
+function bothNaN(a, b) {
+	if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
+		return isNaN(a) && isNaN(b);
+	}
+}
+
+function bothNull(a, b) {
+	return a === null && b === null;
+}
+
+function bothString(a, b) {
+	return typeof a === 'string' && typeof b === 'string';
+}
+
 const t = {
     is(actual, expected, message = "") {
         if (!areEqual(actual, expected)) {
@@ -103,20 +137,21 @@ const t = {
     },
     deepEqual(actual, expected, message = "", _equality = false) {
         const path = [];
-        const addDiff = (path, a, b) => path.push({
-            differences: [
-                '- ' + a,
-                '+ ' + b
-                //common.makeGray('- ') + a,
-                //common.makeGray('+ ') + b
-            ],
-        });
-
-        const bothNaN = (a, b) => {
-            if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
-                return isNaN(a) && isNaN(b);
-            }
-        };
+        const addDiff = (path, a, b) => {
+			if(bothString(a,b)) {
+				let stringDiff = getStringDiff(a,b);
+				a = stringDiff[0];
+				b = stringDiff[1];
+			}
+			path.push({				
+				differences: [
+					'- ' + a,
+					'+ ' + b
+					//common.makeGray('- ') + a,
+					//common.makeGray('+ ') + b
+				]
+			})
+		};        
 
         const compare = (a, b, path) => {
             let ignoreExtra = b instanceof IgnoreExtra;
@@ -127,7 +162,7 @@ const t = {
                 return true;
             }
             // Check base equality
-            if (areEqual(a, b) || (a === null && b === null) || bothNaN(a, b)) {
+            if (areEqual(a, b) || bothNull(a, b) || bothNaN(a, b)) {
                 return true;
             }
             // Check deeper equality
@@ -308,8 +343,8 @@ setImmediate(async _ => {
             testErrorLine = getCallerFromStack(e);
             errorMessage = e.toString();// + ' \n' + getCallerFromStack(e);           
         }
-		
-		// Restore potentially overwritten critical globals
+
+        // Restore potentially overwritten critical globals
 		_backupRestore();
 
         if (logs.length > 0) {
