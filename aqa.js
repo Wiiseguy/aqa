@@ -312,7 +312,7 @@ const t = {
     },
 }
 
-setImmediate(async _ => {
+setImmediate(async function aqa_tests_runner() {
     //console.log("aqa - starting tests", args);
     let isVerbose = args.includes('--verbose');
     const startMs = +new Date;
