@@ -11,6 +11,7 @@ const readdir = fs.promises.readdir;
 
 const [, , ...args] = process.argv
 const cwd = process.cwd();
+const cwds = path.join(cwd, '/');
 
 // RegExps
 const reSkip = /\\\.|\\node_modules/;
@@ -18,46 +19,45 @@ const reJsFile = /.js$/;
 const reNumTestExtract = /(\d+) test/;
 
 let isVerbose = false;
+let isTap = false;
 
 async function main() {
     //console.log(`Args: ${args}`)
     //console.log(`Called from: ${cwd}`)
     //console.log(`Script located at: ${__dirname}`);
 
-    let arg0 = args.filter(a => !a.startsWith('-'))[0]; // Any non-flag argument
+    let arg0 = args.filter(a => !a.startsWith('-'))[0]; // First non-flag argument
 
     isVerbose = args.includes('--verbose');
-    let isWatch = args.includes('--watch');
+    isTap = args.includes('--tap');
+    let isWatch = args.includes('--watch');    
 
     if (isWatch) {
         // Watch files and run tests when changed
         watchFiles();
     } else {
-        if (arg0) {
-            // Param is file/glob
-            let allFiles = await getFiles(cwd);
+        let testsFiles = [];
+        let allFiles = await getFiles(cwd);
+
+        if (arg0) { // Param is file/glob            
             let reGlob = common.microMatch(arg0);
-            let testFiles = [];
             if (typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
-                testFiles.push(arg0);
-            } else {
-                testFiles = allFiles.filter(f => f.match(reGlob));
-                //console.log(arg0, reGlob.source, testFiles);
+                testsFiles.push(arg0);
+            } else {                
+                testsFiles = allFiles.filter(f => f.replace(cwds, '').match(reGlob));
             }
-
-            let result = await runTests(testFiles, false);
-            if (result.failed.length > 0) {
-                process.exit(1);
-            }
-
         } else {
             // Test all files
-            let allFiles = await getFiles(cwd);
-            let testsFiles = filterTestFiles(allFiles);
-            let result = await runTests(testsFiles);
-            if (result.failed.length > 0) {
-                process.exit(1);
-            }
+            testsFiles = filterTestFiles(allFiles);            
+        }
+
+        if(isVerbose) {
+            console.log("Running tests for:", testsFiles.join(', '));
+        }
+
+        let result = await runTests(testsFiles);
+        if (result.failed.length > 0) {
+            process.exit(1);
         }
 
     }
@@ -155,17 +155,21 @@ async function runTests(filesToTest) {
         let relevantOutput = result.stdout;
 
         if (result.code === 1) {
-            let lastLine = getLastLine(result.stderr);
-            let numTests = extractNumTests(lastLine);
-            if (numTests === -1) {
-                numFailed += 1;
-                failed.push({ name: m.name, result, fatal: true });
-            } else {
-                numFailed += numTests;
+            if(isTap) {
                 failed.push({ name: m.name, result })
+            } else {
+                let lastLine = getLastLine(result.stderr);
+                let numTests = extractNumTests(lastLine);
+                if (numTests === -1) {
+                    numFailed += 1;
+                    failed.push({ name: m.name, result, fatal: true });
+                } else {
+                    numFailed += numTests;
+                    failed.push({ name: m.name, result })
+                }
             }
         }
-        else if (result.stdout) {
+        else if (result.stdout && !isTap) {
             let lastLine = getLastLine(result.stdout);
             numOk += extractNumTests(lastLine);			
             relevantOutput = withoutLastLine(result.stdout) + '\n' + result.stderr;
@@ -174,7 +178,7 @@ async function runTests(filesToTest) {
 		relevantOutput = relevantOutput.trim();
 
         if (relevantOutput) {
-            console.log(`[${m.name}]`);
+            if(!isTap) console.log(`[${m.name}]`);
             console.log(relevantOutput);
         }
     });
@@ -183,23 +187,24 @@ async function runTests(filesToTest) {
     let elapsedMs = +new Date - startMs;
 
     // Output results
-    console.log();
-    if (failed.length === 0) {
+    if(!isTap) {
+        console.log();
+        if (failed.length === 0) {
 
-        console.log(common.makeGreen(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
-    } else {
-        failed.forEach(f => {
-            //console.log(f.result.stdout);
-            if (f.fatal) {
-                console.log(common.makeRed("Fatal error:"), f.result.stderr)
-            } else {
-                console.log('  ', common.makeGray(path.relative(cwd, f.name) + ':'));
-                console.log(withoutLastLine(f.result.stderr));
-            }
-            console.log(' ');
-        });
+            console.log(common.makeGreen(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+        } else {
+            failed.forEach(f => {            
+                if (f.fatal) {
+                    console.log(common.makeRed("Fatal error:"), f.result.stderr)
+                } else {
+                    console.log('  ', common.makeGray(path.relative(cwd, f.name) + ':'));
+                    console.log(withoutLastLine(f.result.stderr));
+                }
+                console.log(' ');
+            });
 
-        console.log(common.makeRed(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+            console.log(common.makeRed(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+        }
     }
 
     return { failed };
