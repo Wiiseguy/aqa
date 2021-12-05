@@ -57,7 +57,7 @@ If your test files are named differently, for instance *.spec.js, you can write 
 ```
 
 #### Watch mode
-To automatically run tests whenever you modify your files, aqa has a watch mode. If you desire this functionality, add a new script to your package.json:
+To automatically run tests whenever you modify your files, **aqa** has a watch mode. If you desire this functionality, add a new script to your package.json:
 ```json
 "scripts": {
   "test": "aqa",
@@ -140,6 +140,19 @@ Asserts that `fn` does not throw an exception.
 Asserts that async function or Promise `fn` does not throw an exception.
 #### `t.log(message, ...arguments?)`
 Not actually an assertion method, but helps you easily find for which test method you've logged information. Could be used instead of `console.log`.
+
+
+### CLI parameters
+**aqa** can be run from the terminal like `aqa tests/test-*.js` with the following supported parameters:
+#### `--watch`
+See [Watch mode](#watch-mode)  
+Example: `aqa --watch`
+#### `--verbose`
+Adds verbose logging  
+Example: `aqa --verbose`
+#### `--tap`
+Optimizes output for TAP results.  
+Example: `aqa --tap`
 
 ### Work in progress:
 - Configuration in (nearest) package.json
