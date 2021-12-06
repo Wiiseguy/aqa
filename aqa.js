@@ -17,6 +17,22 @@ const tests = [];
 
 const throwsDefaultOpts = {};
 
+const nop = function() {};
+const suppressedConsole = Object.freeze({
+	log: nop,
+	warn: nop,
+	error: nop,
+	count: nop,	
+	debug: nop,
+	dir: nop,
+	dirxml: nop,
+	info: nop,
+	table: nop,
+	timeEnd: nop,
+	timeLog: nop,
+	trace: nop
+});
+
 function aqa(testName, testFn) {
     if(tests.find(t => t.name === testName)) console.log(`${common.makeRed('WARNING')}: Duplicate test name: "${testName}"`);
     tests.push({ name: testName, fn: testFn });   
@@ -310,6 +326,9 @@ const t = {
             throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
     },
+	disableLogging() {
+		global.console = suppressedConsole;
+	}
 }
 
 setImmediate(async function aqa_tests_runner() {
@@ -331,7 +350,7 @@ setImmediate(async function aqa_tests_runner() {
 
         if (isVerbose) {
             console.log(`Running test: "${test.name}"`);
-        }
+        }		
 
         try {
             await test.fn(localT);
