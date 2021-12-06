@@ -3,14 +3,14 @@
 
 **aqa** is a light-weight and **a** **q**uick **a**lternative to [ava](https://github.com/avajs/ava), with a similar API.
 
-### Installation
+## Installation
 ```
 npm i aqa -D
 ```
 
-### Usage
+## Usage
 
-#### Simple single-file usage
+### Simple single-file usage
 
 _your.tests.js:_
 ```js
@@ -27,7 +27,7 @@ test('Test ourself', t => {
 `
 node your.tests.js
 `
-#### Integration
+### Integration
 To run multiple tests and integrate CI testing with your package, you need to change your package.json's `test` in the `scripts` section to `"aqa"`:
 ```json
 "scripts": {
@@ -56,7 +56,7 @@ If your test files are named differently, for instance *.spec.js, you can write 
 },
 ```
 
-#### Watch mode
+### Watch mode
 To automatically run tests whenever you modify your files, **aqa** has a watch mode. If you desire this functionality, add a new script to your package.json:
 ```json
 "scripts": {
@@ -71,6 +71,7 @@ Like with the `test` script, you can watch files other than `*.test.js`:
 "test:watch": "aqa *.foo.js --watch"
 ```
 
+## API
 ### Assertion
 These assertion methods are currently supported:
 #### `t.is(actual, expected, message?)`
@@ -138,21 +139,22 @@ await t.throws(async _ => {
 Asserts that `fn` does not throw an exception.
 #### `t.notThrowsAsync(fn, message?)`
 Asserts that async function or Promise `fn` does not throw an exception.
+### Utility methods
 #### `t.log(message, ...arguments?)`
-Not actually an assertion method, but helps you easily find for which test method you've logged information. Could be used instead of `console.log`.
+Similar to `console.log`, but helps you easily find for which test method you've logged information. 
+#### `t.disableLogging()`
+Suppresses any calls to `console.log`, `console.warn`, `console.error`, etc. for the current testcase. Note that logging is enabled again automatically after the testcase has completed.
 
-
-### CLI parameters
-**aqa** can be run from the terminal like `aqa tests/test-*.js` with the following supported parameters:
+## CLI parameters
+**aqa** can be run from the terminal like `npx aqa tests/test-*.js` with the following supported parameters:
 #### `--watch`
-See [Watch mode](#watch-mode)  
-Example: `aqa --watch`
+Runs **aqa** in watch mode. See [watch mode](#watch-mode) for more information.
 #### `--verbose`
-Adds verbose logging  
+Adds verbose logging.
 Example: `aqa --verbose`
 #### `--tap`
 Optimizes output for TAP results.  
 Example: `aqa --tap`
 
-### Work in progress:
+## Work in progress:
 - Configuration in (nearest) package.json
