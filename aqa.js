@@ -105,7 +105,7 @@ function getStringDiff(a,b) {
 			]
 		}
 	}
-	return ['a','b']
+	return [a, b]
 }
 
 function getObjectProperties(o) {
@@ -184,7 +184,7 @@ const t = {
             // Check deeper equality
             if (typeof a === "object" && typeof b === "object" && a != null && b != null) {
                 if (a instanceof Date && b instanceof Date && +a !== +b) {
-                    addDiff(path, a.toString(), b.toString());
+                    addDiff(path, a.toISOString(), b.toISOString());
                     return false;
                 }
                 if (a instanceof RegExp && b instanceof RegExp && a.toString() !== b.toString()) {

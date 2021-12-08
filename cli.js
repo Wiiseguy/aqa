@@ -190,7 +190,6 @@ async function runTests(filesToTest) {
     if(!isTap) {
         console.log();
         if (failed.length === 0) {
-
             console.log(common.Color.green(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         } else {
             failed.forEach(f => {            
