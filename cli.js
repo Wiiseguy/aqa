@@ -191,19 +191,19 @@ async function runTests(filesToTest) {
         console.log();
         if (failed.length === 0) {
 
-            console.log(common.makeGreen(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+            console.log(common.Color.green(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         } else {
             failed.forEach(f => {            
                 if (f.fatal) {
-                    console.log(common.makeRed("Fatal error:"), f.result.stderr)
+                    console.log(common.Color.red("Fatal error:"), f.result.stderr)
                 } else {
-                    console.log('  ', common.makeGray(path.relative(cwd, f.name) + ':'));
+                    console.log('  ', common.Color.gray(path.relative(cwd, f.name) + ':'));
                     console.log(withoutLastLine(f.result.stderr));
                 }
                 console.log(' ');
             });
 
-            console.log(common.makeRed(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+            console.log(common.Color.red(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         }
     }
 

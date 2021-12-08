@@ -34,7 +34,7 @@ const suppressedConsole = Object.freeze({
 });
 
 function aqa(testName, testFn) {
-    if(tests.find(t => t.name === testName)) console.log(`${common.makeRed('WARNING')}: Duplicate test name: "${testName}"`);
+    if(tests.find(t => t.name === testName)) console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
     tests.push({ name: testName, fn: testFn });   
 }
 
@@ -163,8 +163,8 @@ const t = {
 				differences: [
 					'- ' + a,
 					'+ ' + b
-					//common.makeGray('- ') + a,
-					//common.makeGray('+ ') + b
+					//common.Color.gray('- ') + a,
+					//common.Color.gray('+ ') + b
 				]
 			})
 		};        
@@ -374,11 +374,11 @@ setImmediate(async function aqa_tests_runner() {
         if (ok) {
             //console.log(`Success: "${test.name}"`);
             if (isVerbose) {
-                console.log(common.makeGreen('OK'));
+                console.log(common.Color.green('OK'));
             }
         } else {
-            console.error(common.makeRed(`FAILED: `), `"${test.name}" @ ${testErrorLine}\n${errorMessage}`);
-            console.error(common.makeGray(getSimplifiedStack(caughtException)));
+            console.error(common.Color.red(`FAILED: `), `"${test.name}" @ ${testErrorLine}\n${errorMessage}`);
+            console.error(common.Color.gray(getSimplifiedStack(caughtException)));
             console.error('');
         }
 
@@ -390,9 +390,9 @@ setImmediate(async function aqa_tests_runner() {
     const elapsedMs = +new Date - startMs;
 
     if (fails === 0) {
-        console.log(common.makeGreen(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+        console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     } else {
-        console.error(common.makeRed(` ${fails} test failed.`), common.makeGray(`(${common.humanTime(elapsedMs)})`))
+        console.error(common.Color.red(` ${fails} test failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         process.exit(1);
     }
 })

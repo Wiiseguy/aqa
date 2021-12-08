@@ -1,16 +1,16 @@
 const test = require('../aqa');
 const common = require("../common");
 
-test('makeRed', async t => {
-    t.is(common.makeRed('abc'), "\x1b[31mabc\x1b[0m");
+test('Color.red', async t => {
+    t.is(common.Color.red('abc'), "\x1b[31mabc\x1b[0m");
 })
 
-test('makeGreen', async t => {
-    t.is(common.makeGreen('abc'), "\x1b[32mabc\x1b[0m");
+test('Color.green', async t => {
+    t.is(common.Color.green('abc'), "\x1b[32mabc\x1b[0m");
 })
 
-test('makeGray', async t => {
-    t.is(common.makeGray('abc'), "\x1b[90mabc\x1b[0m");
+test('Color.gray', async t => {
+    t.is(common.Color.gray('abc'), "\x1b[90mabc\x1b[0m");
 })
 
 test('escapeRegExp', async t => {
@@ -84,8 +84,11 @@ test('filterFiles - REGEXP_TEST_FILES', async t => {
     let sut = common.filterFiles;
     let files = [
         'C:\\DEV\\something.js',
+
         'C:\\DEV\\test.js',
         'C:\\DEV\\test-something.js',
+        'C:/DEV/test-something.js',
+        'tests/test-something.js',
         'C:\\DEV\\a.test.js',
         'C:\\DEV\\a.tests.js',
         'C:\\DEV\\a.spec.js',
@@ -102,9 +105,12 @@ test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
     let sut = common.filterFiles;
     let files = [
         'C:\\DEV\\something.js',
-        'C:\\DEV\\_ignore\\test.js',
+        'C:\\DEV\\node_modules\\test.js',
+
         'C:\\DEV\\test.js',
         'C:\\DEV\\test-something.js',
+        'C:/DEV/test-something.js',
+        'tests/test-something.js',
         'C:\\DEV\\a.test.js',
         'C:\\DEV\\a.tests.js',
         'C:\\DEV\\a.spec.js',
@@ -127,6 +133,7 @@ test('humanTime', async t => {
     t.is(sut(1040), "1.0s");
     t.is(sut(1050), "1.1s");
     t.is(sut(1100), "1.1s");
+    t.is(sut(1900), "1.9s");
     t.is(sut(9999), "10.0s");
 })
 

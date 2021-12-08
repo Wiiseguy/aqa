@@ -1,14 +1,8 @@
-function makeRed(s) {
-	return `\x1b[31m${s}\x1b[0m`;
-}
-
-function makeGreen(s) {
-	return `\x1b[32m${s}\x1b[0m`;
-}
-
-function makeGray(s) {
-    return `\x1b[90m${s}\x1b[0m`;
-}
+const Color = {
+    red:    s => `\x1b[31m${s}\x1b[0m`,
+    green:  s => `\x1b[32m${s}\x1b[0m`,
+    gray:   s => `\x1b[90m${s}\x1b[0m`
+};
 
 function escapeRegExp(s) {
     return s.replace(/[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g, '\\$&');
@@ -39,7 +33,7 @@ function microMatch(s) {
     s = s.replace(/\./g, "__GLOB_DOT__");
     s = s.replace(/-/g, "__GLOB_DASH__"); // dashes outside ranges
 
-    s = s.replace(/\//g, "\\"); // Forward slashes / to backslashes \
+    s = normalizeSlashes(s); // Forward slashes / to backslashes \
     s = escapeRegExp(s);
 
     // Restore
@@ -61,17 +55,22 @@ function microMatch(s) {
     return r;
 }
 
+function normalizeSlashes(str) {
+    return str.replace(/\//g, '\\');
+}
+
 function filterFiles(files, matches = [], ignores = []) {
     return files
-        .filter(f => 
-            matches.some(rg => f.match(rg))
+        .filter(f => {
+            f = normalizeSlashes(f);
+            return matches.some(rg => f.match(rg))
             &&
             (
                 ignores.length === 0
                 ||
                 ignores.every(rg => !f.match(rg))
             )
-        );
+        });
 }
 
 function humanTime(ms) {
@@ -90,13 +89,12 @@ const REGEXP_TEST_FILES = [
 
 const REGEXP_IGNORE_FILES = [
     microMatch("node_modules"),
-    microMatch("*/_([^_])*/*"),
+    //microMatch("*/_([^_])*/*"), // dirs that start with an underscore _
 ];
 
 module.exports = {
-    makeRed,
-    makeGreen,
-    makeGray,
+    Color,
+
     escapeRegExp,
     microMatch,
     filterFiles,
