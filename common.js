@@ -89,7 +89,7 @@ const REGEXP_TEST_FILES = [
 
 const REGEXP_IGNORE_FILES = [
     microMatch("node_modules"),
-    //microMatch("*/_([^_])*/*"), // dirs that start with an underscore _
+    microMatch("*/_([^_])*/*"), // directories that start with a single underscore _
 ];
 
 module.exports = {

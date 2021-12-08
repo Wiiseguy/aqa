@@ -105,6 +105,7 @@ test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
     let sut = common.filterFiles;
     let files = [
         'C:\\DEV\\something.js',
+        'C:\\DEV\\_ignore\\test.js',
         'C:\\DEV\\node_modules\\test.js',
 
         'C:\\DEV\\test.js',
@@ -118,7 +119,7 @@ test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
         'C:\\DEV\\tests\\b.js',
         'C:\\DEV\\__tests__\\c.js',
     ];
-    let testFiles = files.slice(2);
+    let testFiles = files.slice(3);
 
     t.deepEqual(sut(files, common.REGEXP_TEST_FILES, common.REGEXP_IGNORE_FILES), testFiles);
 })
