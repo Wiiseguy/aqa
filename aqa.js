@@ -215,7 +215,7 @@ const t = {
 
                 // Detect extra properties in the expected object, not found in actual                
                 for (let p of bProperties) {
-                    if (!aProperties.includes(p) && typeof b[p] !== 'undefined') {
+                    if (!aProperties.includes(p) && typeof b[p] !== 'undefined' && b[p] !== aqa.ignore) {
                         path.push(p);
                         addDiff(path, 'undefined', smartify(b[p]));
                         return false;
