@@ -6,7 +6,7 @@ const exec = util.promisify(child_process.exec);
 test('Test should-fail', async t => {
     try {
         await exec(`node cli tests/_self/should-fail`);
-    } catch(e) {        
+    } catch (e) {
         t.true(e.stdout.includes('Error: Expected true, got false'));
     }
 })
@@ -14,7 +14,7 @@ test('Test should-fail', async t => {
 test('Test should-fail-fatal', async t => {
     try {
         await exec(`node cli tests/_self/should-fail-fatal.txt`);
-    } catch(e) {
+    } catch (e) {
         t.true(e.stdout.includes('Fatal error:'));
         t.true(e.stdout.includes('SyntaxError:'));
     }

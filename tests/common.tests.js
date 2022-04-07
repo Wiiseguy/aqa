@@ -30,8 +30,8 @@ test('microMatch', async t => {
     t.deepEqual(sut('abc?'), /^abc?$/);
     t.deepEqual(sut('abc+'), /^abc+$/);
     t.deepEqual(sut('abc(xyz)+'), /^abc(xyz)+$/);
-    t.deepEqual(sut('abc(xyz)*'), /^abc(xyz)*$/);    
-    t.deepEqual(sut('a-z'), "a-z");    
+    t.deepEqual(sut('abc(xyz)*'), /^abc(xyz)*$/);
+    t.deepEqual(sut('a-z'), "a-z");
     t.deepEqual(sut('[a-z]'), /^[a-z]$/);
     t.deepEqual(sut('[^a-z]'), /^[^a-z]$/);
     t.deepEqual(sut('[!a-z]'), /^[^a-z]$/);

@@ -62,9 +62,9 @@ test('All', t => {
     t.deepEqual(new Date(2000, 1, 1), new Date(2000, 1, 1));
     t.deepEqual(new Set([1, 2, 3]), new Set([1, 2, 3]))
 
-    t.notDeepEqual([1,2,3], [1,2,4]);
-    t.notDeepEqual([1,2,3], [1,2,3,4]);
-    t.notDeepEqual({atest:1}, {atest:2});
+    t.notDeepEqual([1, 2, 3], [1, 2, 4]);
+    t.notDeepEqual([1, 2, 3], [1, 2, 3, 4]);
+    t.notDeepEqual({ atest: 1 }, { atest: 2 });
 
     t.notDeepEqual({
         a: {
@@ -77,17 +77,17 @@ test('All', t => {
         },
         b: [1, 2, 3]
     },
-    {
-        a: {
-            aa: 1,
-            ab: 2,
-            ac: [1, 2],
-            ad: [{
-                aaa: 100000000
-            }]
-        },
-        b: [1, 2, 3]
-    });
+        {
+            a: {
+                aa: 1,
+                ab: 2,
+                ac: [1, 2],
+                ad: [{
+                    aaa: 100000000
+                }]
+            },
+            b: [1, 2, 3]
+        });
 
     t.notDeepEqual(new Date(2021, 1, 1), new Date(2000, 1, 1));
     t.notDeepEqual(new Set([1, 2, 3]), new Set([1, 2, 4]))
@@ -119,7 +119,7 @@ test('Assert fail messages', async t => {
     try {
         t.is(1, 2);
     } catch (e) {
-        t.is(e.message, "Expected 2, got 1")
+        t.is(e.message, "Expected  2, got 1")
     }
 
     try {
@@ -150,19 +150,19 @@ test('Assert fail messages', async t => {
 
     // deepEqual - TODO: rewrite other try-catches to t.throws
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }))
-    t.is(e.message, "Difference found at path: a\n- 1\n+ 2")    
+    t.is(e.message, "Difference found at path: a\n- 1\n+ 2")
 
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 1, b: 2 }))
-    t.is(e.message, "Difference found at path: b\n- undefined\n+ 2")    
+    t.is(e.message, "Difference found at path: b\n- undefined\n+ 2")
 
     e = t.throws(_ => t.deepEqual({ a: [1, 2, 3] }, { a: [1, 2, 4] }))
-    t.is(e.message, "Difference found at path: a[2]\n- 3\n+ 4")    
+    t.is(e.message, "Difference found at path: a[2]\n- 3\n+ 4")
 
     e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ b: 1 })))
-    t.is(e.message, "Difference found at path: b\n- 2\n+ 1")    
+    t.is(e.message, "Difference found at path: b\n- 2\n+ 1")
 
     e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ c: 1 })))
-    t.is(e.message, "Difference found at path: c\n- undefined\n+ 1")    
+    t.is(e.message, "Difference found at path: c\n- undefined\n+ 1")
 
     // notDeepEqual
     try {
@@ -228,7 +228,7 @@ test('Assert fail messages', async t => {
 test('Getters & deepEqual', t => {
     let o = {};
 
-    Object.defineProperty(o, 'got', { get() { return 9000; }});
+    Object.defineProperty(o, 'got', { get() { return 9000; } });
 
     t.is(o.got, 9000);
     t.notDeepEqual(o, {

@@ -152,9 +152,7 @@ Runs **aqa** in watch mode. See [watch mode](#watch-mode) for more information.
 #### `--verbose`
 Adds verbose logging.
 Example: `aqa --verbose`
-#### `--tap`
-Optimizes output for TAP results.  
-Example: `aqa --tap`
 
 ## Work in progress:
 - Configuration in (nearest) package.json
+- TAP results
