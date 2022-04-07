@@ -11,31 +11,33 @@ const STRING_DIFF_MAX_LINES = 3;
 const _backupItems = ['process', 'console'];
 const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
-const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b] ) );
+const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b]));
+const errorMatcher = /at .* \((.*):(\d+):(\d+)/;
+const initialSlashMatcher = /^(\\|\/)/;
 
 const tests = [];
 
 const throwsDefaultOpts = {};
 
-const nop = function() {};
+const nop = function () { };
 const suppressedConsole = Object.freeze({
-	log: nop,
-	warn: nop,
-	error: nop,
-	count: nop,	
-	debug: nop,
-	dir: nop,
-	dirxml: nop,
-	info: nop,
-	table: nop,
-	timeEnd: nop,
-	timeLog: nop,
-	trace: nop
+    log: nop,
+    warn: nop,
+    error: nop,
+    count: nop,
+    debug: nop,
+    dir: nop,
+    dirxml: nop,
+    info: nop,
+    table: nop,
+    timeEnd: nop,
+    timeLog: nop,
+    trace: nop
 });
 
 function aqa(testName, testFn) {
-    if(tests.find(t => t.name === testName)) console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
-    tests.push({ name: testName, fn: testFn });   
+    if (tests.find(t => t.name === testName)) console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
+    tests.push({ name: testName, fn: testFn });
 }
 
 function IgnoreExtra(value) {
@@ -43,7 +45,7 @@ function IgnoreExtra(value) {
 }
 
 aqa.ignore = Symbol('aqa_ignore');
-aqa.ignoreExtra = function(value) {
+aqa.ignoreExtra = function (value) {
     return new IgnoreExtra(value);
 };
 
@@ -56,9 +58,8 @@ function getCallerFromStack(e) {
     stack = stack.replace(e.message, ''); // Stack repeats the message
     let lines = stack.split('\n').map(s => s.trim());
     let probableCause = lines.find(l => l.includes(testScriptFilename));
-    let path = probableCause.split('\\').reverse()[0];
-    path = path.substr(0, path.length - 1);
-    return path;
+    let [_, file, line, col] = probableCause.match(errorMatcher);
+    return file.replace(process.cwd(), '').replace(initialSlashMatcher, '') + ':' + line + ':' + col;
 }
 
 function getSimplifiedStack(e) {
@@ -69,6 +70,8 @@ function getSimplifiedStack(e) {
         .slice(1)
         //.map(s => s.trim())
         .filter(s => !s.includes(thisFilename));
+    
+    if (lines.length <= 1) return '';
 
     return lines.join('\n');
 }
@@ -89,23 +92,23 @@ function quoteIfString(s) {
     return s;
 }
 
-function getStringDiff(a,b) {
-	let linesA = a.split('\n');
-	let linesB = b.split('\n');
-	
-	for(let i = 0; i < linesA.length; i++) {
-		let la = linesA[i];
-		let lb = linesB[i];
-		if(la !== lb) {
-			let lai = i+1 >= linesB.length ? undefined : i+STRING_DIFF_MAX_LINES;
-			let lbi = i+1 >= linesA.length ? undefined : i+STRING_DIFF_MAX_LINES;
-			return [
-				linesA.slice(i, lai).join('\n'),
-				linesB.slice(i, lbi).join('\n')
-			]
-		}
-	}
-	return [a, b]
+function getStringDiff(a, b) {
+    let linesA = a.split('\n');
+    let linesB = b.split('\n');
+
+    for (let i = 0; i < linesA.length; i++) {
+        let la = linesA[i];
+        let lb = linesB[i];
+        if (la !== lb) {
+            let lai = i + 1 >= linesB.length ? undefined : i + STRING_DIFF_MAX_LINES;
+            let lbi = i + 1 >= linesA.length ? undefined : i + STRING_DIFF_MAX_LINES;
+            return [
+                linesA.slice(i, lai).join('\n'),
+                linesB.slice(i, lbi).join('\n')
+            ]
+        }
+    }
+    return [a, b]
 }
 
 function getObjectProperties(o) {
@@ -122,22 +125,22 @@ function getEnumerablePropertyNames(o) {
 }
 
 function areEqual(a, b) {
-    if(typeof a === 'number' && typeof b === 'number' && a === b) return true;
-    return Object.is(a,b);
+    if (typeof a === 'number' && typeof b === 'number' && a === b) return true;
+    return Object.is(a, b);
 }
 
 function bothNaN(a, b) {
-	if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
-		return isNaN(a) && isNaN(b);
-	}
+    if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
+        return isNaN(a) && isNaN(b);
+    }
 }
 
 function bothNull(a, b) {
-	return a === null && b === null;
+    return a === null && b === null;
 }
 
 function bothString(a, b) {
-	return typeof a === 'string' && typeof b === 'string';
+    return typeof a === 'string' && typeof b === 'string';
 }
 
 const t = {
@@ -154,24 +157,24 @@ const t = {
     deepEqual(actual, expected, message = "", _equality = false) {
         const path = [];
         const addDiff = (path, a, b) => {
-			if(bothString(a,b)) {
-				let stringDiff = getStringDiff(a,b);
-				a = stringDiff[0];
-				b = stringDiff[1];
-			}
-			path.push({				
-				differences: [
-					'- ' + a,
-					'+ ' + b
-					//common.Color.gray('- ') + a,
-					//common.Color.gray('+ ') + b
-				]
-			})
-		};        
+            if (bothString(a, b)) {
+                let stringDiff = getStringDiff(a, b);
+                a = stringDiff[0];
+                b = stringDiff[1];
+            }
+            path.push({
+                differences: [
+                    '- ' + a,
+                    '+ ' + b
+                    //common.Color.gray('- ') + a,
+                    //common.Color.gray('+ ') + b
+                ]
+            })
+        };
 
         const compare = (a, b, path) => {
             let ignoreExtra = b instanceof IgnoreExtra;
-            if(ignoreExtra) {
+            if (ignoreExtra) {
                 b = b.value;
             }
             if (b === aqa.ignore) {
@@ -205,7 +208,7 @@ const t = {
                 const bProperties = getEnumerablePropertyNames(b);
 
                 for (let p of aProperties) {
-                    if(ignoreExtra && !bProperties.includes(p)) continue;
+                    if (ignoreExtra && !bProperties.includes(p)) continue;
                     path.push(p);
                     if (!compare(a[p], b[p], path)) {
                         return false;
@@ -213,7 +216,7 @@ const t = {
                     path.pop();
                 }
 
-                // Detect extra properties in the expected object, not found in actual                
+                // Detect extra properties in the expected object, not found in actual
                 for (let p of bProperties) {
                     if (!aProperties.includes(p) && typeof b[p] !== 'undefined' && b[p] !== aqa.ignore) {
                         path.push(p);
@@ -326,9 +329,9 @@ const t = {
             throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
     },
-	disableLogging() {
-		global.console = suppressedConsole;
-	}
+    disableLogging() {
+        global.console = suppressedConsole;
+    }
 }
 
 setImmediate(async function aqa_tests_runner() {
@@ -350,7 +353,7 @@ setImmediate(async function aqa_tests_runner() {
 
         if (isVerbose) {
             console.log(`Running test: "${test.name}"`);
-        }		
+        }
 
         try {
             await test.fn(localT);
@@ -360,11 +363,11 @@ setImmediate(async function aqa_tests_runner() {
             ok = false;
             //console.error(e);
             testErrorLine = getCallerFromStack(e);
-            errorMessage = e.toString();// + ' \n' + getCallerFromStack(e);           
+            errorMessage = e.toString();// + ' \n' + getCallerFromStack(e);
         }
 
         // Restore potentially overwritten critical globals
-		_backupRestore();
+        _backupRestore();
 
         if (logs.length > 0) {
             console.log(`[Log output for "${test.name}":]`);
@@ -377,8 +380,13 @@ setImmediate(async function aqa_tests_runner() {
                 console.log(common.Color.green('OK'));
             }
         } else {
-            console.error(common.Color.red(`FAILED: `), `"${test.name}" @ ${testErrorLine}\n${errorMessage}`);
-            console.error(common.Color.gray(getSimplifiedStack(caughtException)));
+            console.error(common.Color.red(`FAILED: `), `"${test.name}"`);
+            console.error(common.Color.gray(testErrorLine));
+            console.error(errorMessage);
+            let stack = getSimplifiedStack(caughtException);
+            if (stack) {
+                console.error(common.Color.gray(getSimplifiedStack(caughtException)));
+            }
             console.error('');
         }
 

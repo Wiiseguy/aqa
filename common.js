@@ -78,6 +78,18 @@ function humanTime(ms) {
     return ms + 'ms';
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return function () {
+        let context = this, args = arguments;
+        let later = function () {
+            timeout = null;
+            func.apply(context, args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    }
+}
 
 const REGEXP_TEST_FILES = [
     microMatch("*tests?.js"),
@@ -87,8 +99,9 @@ const REGEXP_TEST_FILES = [
     microMatch("*/__tests__/*.js")
 ];
 
-const REGEXP_IGNORE_FILES = [
+const REGEXP_IGNORE_FILES = [    
     microMatch("node_modules"),
+    microMatch("*/.([^.])*/*"), // directories that start with a single period .
     microMatch("*/_([^_])*/*"), // directories that start with a single underscore _
 ];
 
@@ -99,6 +112,7 @@ module.exports = {
     microMatch,
     filterFiles,
     humanTime,
+    debounce,
 
     REGEXP_TEST_FILES,
     REGEXP_IGNORE_FILES

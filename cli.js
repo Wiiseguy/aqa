@@ -13,6 +13,8 @@ const [, , ...args] = process.argv
 const cwd = process.cwd();
 const cwds = path.join(cwd, '/');
 
+const debounceTimeout = 500;
+
 // RegExps
 const reSkip = /\\\.|\\node_modules/;
 const reJsFile = /.js$/;
@@ -30,7 +32,7 @@ async function main() {
 
     isVerbose = args.includes('--verbose');
     isTap = args.includes('--tap');
-    let isWatch = args.includes('--watch');    
+    let isWatch = args.includes('--watch');
 
     if (isWatch) {
         // Watch files and run tests when changed
@@ -39,19 +41,19 @@ async function main() {
         let testsFiles = [];
         let allFiles = await getFiles(cwd);
 
-        if (arg0) { // Param is file/glob            
+        if (arg0) { // Param is file/glob
             let reGlob = common.microMatch(arg0);
             if (typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
                 testsFiles.push(arg0);
-            } else {                
+            } else {
                 testsFiles = allFiles.filter(f => f.replace(cwds, '').match(reGlob));
             }
         } else {
             // Test all files
-            testsFiles = filterTestFiles(allFiles);            
+            testsFiles = filterTestFiles(allFiles);
         }
 
-        if(isVerbose) {
+        if (isVerbose) {
             console.log("Running tests for:", testsFiles.join(', '));
         }
 
@@ -64,9 +66,15 @@ async function main() {
 }
 
 async function watchFiles() {
-    let allFiles = await getFiles(cwd);
-    let testsFiles = filterTestFiles(allFiles);
-    let nonTestFiles = allFiles.filter(f => f.match(reJsFile) && !testsFiles.includes(f));
+    let testsFiles = [];
+    let nonTestFiles = [];
+    let fileWatchers = [];
+
+    // Watch
+    const watch = (file, callback) => {
+        let watcher = fs.watch(file, callback);
+        fileWatchers.push(watcher);
+    };
 
     // Collect & debounce
     let requestTimeout;
@@ -81,41 +89,76 @@ async function watchFiles() {
             console.log("[watch] Running tests for:", requested.map(r => path.basename(r)).join(', '));
             runTests(requested);
             requested.length = 0;
-        }, 250);
+        }, debounceTimeout);
     };
-
     const requestRuns = files => files.forEach(requestRun);
 
-    // Watch test files
-    testsFiles.forEach(tf => {
-        fs.watch(tf, (type, fileName) => {
-            if (isVerbose) {
-                console.log('Watch triggered for test file:', type, fileName);
-            }
-            requestRun(tf);
-        })
-    });
+    // Scan and watch
+    const scanAndWatch = common.debounce(async _ => {
+        clearTimeout(requestTimeout);
+        fileWatchers.forEach(w => w.close());
+        fileWatchers.length = 0;        
 
-    // Watch non-test files and simply run all tests when these change
-    nonTestFiles.forEach(ntf => {
-        fs.watch(ntf, (type, fileName) => {
-            let ext = path.extname(fileName);
-            let base = path.basename(fileName, ext);
-            if (isVerbose) {
-                console.log('Watch triggered for non-test file:', type, fileName);
-            }
+        let allFiles = await getFiles(cwd);
+        testsFiles = filterTestFiles(allFiles);
+        nonTestFiles = allFiles.filter(f => f.match(reJsFile) && !testsFiles.includes(f));
+        //console.log('***** (re)scan triggered', { testsFiles, nonTestFiles })
 
-            let relevantTestFiles = testsFiles.filter(tf => path.basename(tf).startsWith(base));
-            if(relevantTestFiles.length > 0) {
-                requestRuns(relevantTestFiles);
-            } else {
-                // Test all files
-                requestRuns(testsFiles);
-            }
-        })
+        // Watch test files
+        testsFiles.forEach(tf => {
+            watch(tf, (type, fileName) => {
+                if (isVerbose) {
+                    console.log('Watch triggered for test file:', type, fileName);
+                }
+                requestRun(tf);
+            })
+        });
+
+        // Watch non-test files and simply run all tests when these change
+        nonTestFiles.forEach(ntf => {
+            watch(ntf, (type, fileName) => {
+                let ext = path.extname(fileName);
+                let base = path.basename(fileName, ext);
+                if (isVerbose) {
+                    console.log('Watch triggered for non-test file:', type, fileName);
+                }
+
+                let relevantTestFiles = testsFiles.filter(tf => path.basename(tf).startsWith(base));
+                if (relevantTestFiles.length > 0) {
+                    requestRuns(relevantTestFiles);
+                } else {
+                    // Test all files
+                    requestRuns(testsFiles);
+                }
+            })
+        });
+    }, debounceTimeout);
+
+    // Watch dir
+    fs.watch(cwd, { recursive: true }, (type, fileName) => {
+        if (fileName == null) {
+            console.warn('Empty filename detected in fs.watch:', { type, fileName });
+            return;
+        }
+        let resolvedFileName = path.join(cwd, fileName);
+        if (isVerbose) {
+            console.log('Watch triggered for dir:', type, cwd, resolvedFileName);
+        }
+
+        let filtered = common.filterFiles([resolvedFileName], [''], common.REGEXP_IGNORE_FILES);
+
+        if (filtered.length === 0) return;
+
+        if (!testsFiles.includes(resolvedFileName) && !nonTestFiles.includes(resolvedFileName)) {
+            clearTimeout(requestTimeout);
+            requested.length = 0;
+            scanAndWatch();
+        }
+
     })
 
     console.log("[watch] aqa - watcher active, waiting for file changes...");
+    scanAndWatch();
 
     // Initial run
     //testsFiles.forEach(tf => requestRun(tf));
@@ -155,7 +198,7 @@ async function runTests(filesToTest) {
         let relevantOutput = result.stdout;
 
         if (result.code === 1) {
-            if(isTap) {
+            if (isTap) {
                 failed.push({ name: m.name, result })
             } else {
                 let lastLine = getLastLine(result.stderr);
@@ -171,14 +214,14 @@ async function runTests(filesToTest) {
         }
         else if (result.stdout && !isTap) {
             let lastLine = getLastLine(result.stdout);
-            numOk += extractNumTests(lastLine);			
+            numOk += extractNumTests(lastLine);
             relevantOutput = withoutLastLine(result.stdout) + '\n' + result.stderr;
         }
-		
-		relevantOutput = relevantOutput.trim();
+
+        relevantOutput = relevantOutput.trim();
 
         if (relevantOutput) {
-            if(!isTap) console.log(`[${m.name}]`);
+            if (!isTap) console.log(`[${m.name}]`);
             console.log(relevantOutput);
         }
     });
@@ -187,16 +230,16 @@ async function runTests(filesToTest) {
     let elapsedMs = +new Date - startMs;
 
     // Output results
-    if(!isTap) {
+    if (!isTap) {
         console.log();
         if (failed.length === 0) {
             console.log(common.Color.green(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         } else {
-            failed.forEach(f => {            
+            failed.forEach(f => {
                 if (f.fatal) {
                     console.log(common.Color.red("Fatal error:"), f.result.stderr)
                 } else {
-                    console.log('  ', common.Color.gray(path.relative(cwd, f.name) + ':'));
+                    //console.log('  ', common.Color.gray(path.relative(cwd, f.name) + ':'));
                     console.log(withoutLastLine(f.result.stderr));
                 }
                 console.log(' ');

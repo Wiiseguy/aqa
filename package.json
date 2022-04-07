@@ -5,7 +5,8 @@
   "main": "aqa.js",
   "scripts": {
     "test": "node cli",
-    "watch": "node cli --watch"
+    "watch": "node cli --watch",
+    "watch:verbose": "node cli --watch --verbose"
   },
   "bin": {
     "aqa": "cli.js"
