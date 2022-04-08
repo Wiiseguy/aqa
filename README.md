@@ -78,6 +78,10 @@ These assertion methods are currently supported:
 Asserts that `actual` is equal to `expected`.
 #### `t.not(actual, notEpected, message?)`
 Asserts that `actual` is **not** equal to `notEpected`.
+#### `t.near(actual, expected, delta, message?)`
+Asserts that `actual` is equal to `expected` within the precision of `delta`.
+#### `t.notNear(actual, expected, delta, message?)`
+Asserts that `actual` is **not** equal to `expected` within the precision of `delta`.
 #### `t.deepEqual(actual, expected, message?)`
 Asserts that `actual` is deeply equal to `expected`. `test.ignore` can be used to skip certain properties, i.e.:
 ```js
