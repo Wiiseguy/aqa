@@ -34,8 +34,6 @@ test('Async fail test', async t => {
     });
 });
 
-
-
 test('Log test', async t => {
     //console.log("Hello", 1, 2, "arg3")
 })

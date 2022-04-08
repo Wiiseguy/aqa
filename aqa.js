@@ -70,7 +70,7 @@ function getSimplifiedStack(e) {
         .slice(1)
         //.map(s => s.trim())
         .filter(s => !s.includes(thisFilename));
-    
+
     if (lines.length <= 1) return '';
 
     return lines.join('\n');
@@ -129,6 +129,12 @@ function areEqual(a, b) {
     return Object.is(a, b);
 }
 
+function isNear(a, b, delta) {
+    delta = Math.abs(delta);
+    let actualDelta = a - b;
+    return Math.abs(actualDelta) <= (delta + Number.EPSILON);
+}
+
 function bothNaN(a, b) {
     if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
         return isNaN(a) && isNaN(b);
@@ -152,6 +158,18 @@ const t = {
     not(actual, expected, message = "") {
         if (areEqual(actual, expected)) {
             throw new Error(`Expected something other than ${quoteIfString(expected)}, but got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
+        }
+    },
+    near(actual, expected, delta, message = "") {
+        if (!isNear(actual, expected, delta)) {
+            let diff = actual - expected;
+            throw new Error(`Expected ${quoteIfString(expected)} +/- ${Math.abs(delta)}, got ${quoteIfString(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
+        }
+    },
+    notNear(actual, expected, delta, message = "") {
+        if (isNear(actual, expected, delta)) {
+            let diff = actual - expected;
+            throw new Error(`Expected something other than ${quoteIfString(expected)} +/- ${Math.abs(delta)}, but got ${quoteIfString(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
         }
     },
     deepEqual(actual, expected, message = "", _equality = false) {
