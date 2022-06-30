@@ -84,7 +84,11 @@ function prefixMessage(message, prefix) {
 
 function smartify(o) {
     if (typeof o === 'number' || o instanceof RegExp) return o.toString();
-    return util.inspect(o);
+    return util.inspect(o, {
+        maxStringLength: Infinity,
+        maxArrayLength: Infinity,
+        maxDepth: Infinity
+    });
 }
 
 function quoteIfString(s) {
