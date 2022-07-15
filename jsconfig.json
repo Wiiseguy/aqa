@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "target": "ESNext",
+        "allowUnusedLabels": false,
+        "allowUnreachableCode": false,
+        "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "moduleResolution": "node"
+    }
+}

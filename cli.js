@@ -192,7 +192,7 @@ async function runTests(filesToTest) {
     let numOk = 0;
     let numFailed = 0;
     let failed = [];
-    tasks.forEach((m, i) => {
+    tasks.forEach(m => {
         let result = m.result;
 
         let relevantOutput = result.stdout;

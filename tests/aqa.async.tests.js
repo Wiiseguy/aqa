@@ -5,7 +5,7 @@ function delay(ms) {
 }
 
 function delayFail(ms) {
-    return new Promise((resolve, reject) => {
+    return new Promise((_resolve, reject) => {
         setTimeout(_ => {
             reject(new TypeError('delayFail'));
         }, ms);

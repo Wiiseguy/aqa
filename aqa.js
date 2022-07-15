@@ -21,6 +21,7 @@ const throwsDefaultOpts = {};
 
 const nop = function () { };
 const suppressedConsole = Object.freeze({
+    Console: console.Console,
     log: nop,
     warn: nop,
     error: nop,
@@ -32,9 +33,24 @@ const suppressedConsole = Object.freeze({
     table: nop,
     timeEnd: nop,
     timeLog: nop,
-    trace: nop
+    trace: nop,
+    assert: nop,
+    clear: nop,
+    countReset: nop,
+    group: nop,
+    groupCollapsed: nop,
+    groupEnd: nop,
+    time: nop,
+    timeStamp: nop,
+    profile: nop,
+    profileEnd: nop
 });
 
+/**
+ * Queue a test to be run.
+ * @param {string} testName 
+ * @param {(t: Asserts) => unknown} testFn 
+ */
 function aqa(testName, testFn) {
     if (tests.find(t => t.name === testName)) console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
     tests.push({ name: testName, fn: testFn });
@@ -87,7 +103,7 @@ function smartify(o) {
     return util.inspect(o, {
         maxStringLength: Infinity,
         maxArrayLength: Infinity,
-        maxDepth: Infinity
+        depth: Infinity
     });
 }
 
@@ -141,7 +157,7 @@ function isNear(a, b, delta) {
 
 function bothNaN(a, b) {
     if ((typeof a === 'number' && typeof b === 'number') || (a instanceof Date && b instanceof Date)) {
-        return isNaN(a) && isNaN(b);
+        return isNaN(Number(a)) && isNaN(Number(b));
     }
 }
 
@@ -153,29 +169,29 @@ function bothString(a, b) {
     return typeof a === 'string' && typeof b === 'string';
 }
 
-const t = {
+class Asserts {
     is(actual, expected, message = "") {
         if (!areEqual(actual, expected)) {
             throw new Error(`Expected ${quoteIfString(expected)}, got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
         }
-    },
+    }
     not(actual, expected, message = "") {
         if (areEqual(actual, expected)) {
             throw new Error(`Expected something other than ${quoteIfString(expected)}, but got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
         }
-    },
+    }
     near(actual, expected, delta, message = "") {
         if (!isNear(actual, expected, delta)) {
             let diff = actual - expected;
             throw new Error(`Expected ${quoteIfString(expected)} +/- ${Math.abs(delta)}, got ${quoteIfString(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
         }
-    },
+    }
     notNear(actual, expected, delta, message = "") {
         if (isNear(actual, expected, delta)) {
             let diff = actual - expected;
             throw new Error(`Expected something other than ${quoteIfString(expected)} +/- ${Math.abs(delta)}, but got ${quoteIfString(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
         }
-    },
+    }
     deepEqual(actual, expected, message = "", _equality = false) {
         const path = [];
         const addDiff = (path, a, b) => {
@@ -273,22 +289,22 @@ const t = {
                 throw new Error(`Difference found at path: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`.trim());
             }
         }
-    },
+    }
     notDeepEqual(actual, expected, message = "") {
         this.deepEqual(actual, expected, message, true);
-    },
+    }
     true(actual, message = "") {
-        expected = true;
+        let expected = true;
         if (actual !== expected) {
             throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
         }
-    },
+    }
     false(actual, message = "") {
-        expected = false;
+        let expected = false;
         if (actual !== expected) {
             throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
         }
-    },
+    }
     throws(fn, opts, message = "") {
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
@@ -310,7 +326,7 @@ const t = {
             return caughtException;
         }
         throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
-    },
+    }
     notThrows(fn, message = "") {
         try {
             if (typeof fn === 'function') {
@@ -319,7 +335,7 @@ const t = {
         } catch (e) {
             throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
-    },
+    }
     async throwsAsync(fn, opts, message = "") { // TODO: SPOD with throws?
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
@@ -341,7 +357,7 @@ const t = {
             return caughtException;
         }
         throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
-    },
+    }
     async notThrowsAsync(fn, message = "") {
         try {
             if (typeof fn === 'function') {
@@ -350,11 +366,14 @@ const t = {
         } catch (e) {
             throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
-    },
+    }
     disableLogging() {
         global.console = suppressedConsole;
     }
+    log() { }
 }
+
+const t = new Asserts();
 
 setImmediate(async function aqa_tests_runner() {
     //console.log("aqa - starting tests", args);
