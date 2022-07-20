@@ -169,6 +169,13 @@ function bothString(a, b) {
     return typeof a === 'string' && typeof b === 'string';
 }
 
+function pathToString(path) {
+    return path.map((p, pi) => {
+        if (Number.isFinite(+p)) return `[${p}]`;
+        return pi > 0 ? '.' + p : p;
+    }).join('') || '(root)';
+}
+
 class Asserts {
     is(actual, expected, message = "") {
         if (!areEqual(actual, expected)) {
@@ -270,7 +277,12 @@ class Asserts {
             return false;
         };
 
-        let equal = compare(actual, expected, path);
+        let equal;
+        try {
+            equal = compare(actual, expected, path);
+        } catch (e) {
+            throw new Error(`Error was thrown while comparing the path "${pathToString(path)}": ${e.message}`);
+        }
 
         if (equal === _equality) {
             if (_equality === true) {
@@ -282,10 +294,7 @@ class Asserts {
                     diff = last.differences;
                 }
                 let diffStr = diff.join('\n');
-                let pathString = path.map((p, pi) => {
-                    if (Number.isFinite(+p)) return `[${p}]`;
-                    return pi > 0 ? '.' + p : p;
-                }).join('') || '(root)';
+                let pathString = pathToString(path);
                 throw new Error(`Difference found at path: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`.trim());
             }
         }
