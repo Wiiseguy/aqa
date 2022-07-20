@@ -222,6 +222,36 @@ test('Assert fail messages', async t => {
     e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ c: 1 })))
     t.is(e.message, "Difference found at path: c\n- undefined\n+ 1")
 
+    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { a: 2 }))
+    t.deepEqual(e.message, 'Difference found at path: a\n- 1\n+ 2')
+
+    e = t.throws(_ => t.deepEqual({ a: 1 }, { get a() { return 2; } } ))
+    t.deepEqual(e.message, 'Difference found at path: a\n- 1\n+ 2')
+
+    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { return 2; } } ))
+    t.deepEqual(e.message, 'Difference found at path: a\n- 1\n+ 2')
+
+    e = t.throws(_ => t.deepEqual({ get a() { throw Error('X'); } }, { get a() { return 2; } } ))
+    t.deepEqual(e.message, 'Error was thrown while comparing the path "a": X')
+
+    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { throw Error('X'); } } ))
+    t.deepEqual(e.message, 'Error was thrown while comparing the path "a": X')
+
+    e = t.throws(_ => t.deepEqual({
+        a: {
+            b: [{
+                get c() { throw Error('X'); }
+            }]
+        }
+    }, {
+        a: {
+            b: [{
+                c: 2
+            }]
+        }
+    }))
+    t.deepEqual(e.message, 'Error was thrown while comparing the path "a.b[0].c": X')
+
     // notDeepEqual
     e = t.throws(_ => t.notDeepEqual({ a: 1 }, { a: 1 }))
     t.is(e.message, "No difference between actual and expected.")
