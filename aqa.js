@@ -13,7 +13,6 @@ const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
 const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b]));
 const errorMatcher = /at .* \((.*):(\d+):(\d+)/;
-const initialSlashMatcher = /^(\\|\/)/;
 
 const tests = [];
 
@@ -75,7 +74,7 @@ function getCallerFromStack(e) {
     let lines = stack.split('\n').map(s => s.trim());
     let probableCause = lines.find(l => l.includes(testScriptFilename));
     let [_, file, line, col] = probableCause.match(errorMatcher);
-    return file.replace(process.cwd(), '').replace(initialSlashMatcher, '') + ':' + line + ':' + col;
+    return `${file}:${line}:${col}`;
 }
 
 function getSimplifiedStack(e) {
