@@ -17,7 +17,7 @@ const debounceTimeout = 500;
 
 // RegExps
 const reSkip = /\\\.|\\node_modules/;
-const reJsFile = /.js$/;
+const reJsFile = /\.js$/;
 const reNumTestExtract = /(\d+) test/;
 
 let isVerbose = false;
@@ -137,7 +137,7 @@ async function watchFiles() {
     // Watch dir
     fs.watch(cwd, { recursive: true }, (type, fileName) => {
         if (fileName == null) {
-            console.warn('Empty filename detected in fs.watch:', { type, fileName });
+            //console.warn('Empty filename detected in fs.watch:', { type, fileName });
             return;
         }
         let resolvedFileName = path.join(cwd, fileName);
@@ -145,7 +145,7 @@ async function watchFiles() {
             console.log('Watch triggered for dir:', type, cwd, resolvedFileName);
         }
 
-        let filtered = common.filterFiles([resolvedFileName], [''], common.REGEXP_IGNORE_FILES);
+        let filtered = common.filterFiles([resolvedFileName], [reJsFile], common.REGEXP_IGNORE_FILES);
 
         if (filtered.length === 0) return;
 
