@@ -2,6 +2,9 @@
     aqa - dependency-less testing
 */
 const util = require("util");
+const fs = require('fs');
+const path = require('path');
+
 const common = require("./common");
 const [, , ...args] = process.argv;
 const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
@@ -64,6 +67,26 @@ aqa.ignoreExtra = function (value) {
     return new IgnoreExtra(value);
 };
 
+function getFilePosition(file, line, col) {
+    // Check if a Source Map is available
+    let mapFile = file + '.map';
+    let exists = fs.existsSync(mapFile);
+    if (exists) {
+        try {
+            let rawSourceMap = JSON.parse(fs.readFileSync(mapFile).toString());
+            let mapped = common.mapSourceLocation(line, col, rawSourceMap.mappings, rawSourceMap.sources, rawSourceMap.names);            
+            let fileDir = path.dirname(file);
+            let mapFilePath = path.join(fileDir, mapped.source);
+            return `${mapFilePath}:${mapped.line}:${mapped.column} [SourceMap]`;
+        } catch (e) {
+            console.log("Couldn't map source location", e);
+        }
+    }
+    
+    // Return default file:line:col
+    return `${file}:${line}:${col}`;
+}
+
 function getCallerFromStack(e) {
     let stack = e.stack;
 
@@ -74,7 +97,7 @@ function getCallerFromStack(e) {
     let lines = stack.split('\n').map(s => s.trim());
     let probableCause = lines.find(l => l.includes(testScriptFilename));
     let [_, file, line, col] = probableCause.match(errorMatcher);
-    return `${file}:${line}:${col}`;
+    return getFilePosition(file, line, col);
 }
 
 function getSimplifiedStack(e) {
