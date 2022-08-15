@@ -222,6 +222,7 @@ class Asserts {
         }
     }
     deepEqual(actual, expected, message = "", _equality = false) {
+        if (typeof _equality !== 'boolean') _equality = false;
         const path = [];
         const addDiff = (path, a, b) => {
             if (bothString(a, b)) {

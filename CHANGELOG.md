@@ -2,6 +2,10 @@
 
 ## 2022
 
+### [1.3.8] (TBD)
+- Added strict check for the type of the equality param of `deepEqual`
+- README improvements
+
 ### [1.3.7] (14-aug-2022)
 - Added Source Map support
 - Created this changelog + all entries retroactively

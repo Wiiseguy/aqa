@@ -252,6 +252,9 @@ test('Assert fail messages', async t => {
     }))
     t.deepEqual(e.message, 'Error was thrown while comparing the path "a.b[0].c": X')
 
+    /** @ts-ignore passing 1 for the equality param should not be considered 'true' */
+    e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }, 'message', 1))
+
     // notDeepEqual
     e = t.throws(_ => t.notDeepEqual({ a: 1 }, { a: 1 }))
     t.is(e.message, "No difference between actual and expected.")

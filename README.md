@@ -18,12 +18,13 @@ npm i aqa -D
 _your.tests.js:_
 ```js
 const test = require('aqa')
+const myLib = require('./my-lib')
 
-test('Test ourself', t => {    
-  t.is(1 + 1, 2);
-  t.not(1 + 1, 3);
-  t.true(1 === 1);
-  t.false(1 === 2);
+test('Test our library', t => {    
+  t.is(myLib.add(1, 1), 2);
+  t.not(myLib.add(2, 2), 3);
+  t.true(myLib.isPrime(3));
+  t.false(myLib.isOdd(2));
 })
 ```
 
@@ -78,6 +79,12 @@ Like with the `test` script, you can watch files other than `*.test.js`:
 
 ## API
 ### Assertion
+The callback parameter for `test()` wraps many assertion methods (in this case `t`):
+```js
+test('Test name', t => {    
+  // Your assertions
+})
+```
 These assertion methods are currently supported:
 #### `t.is(actual, expected, message?)`
 Asserts that `actual` is equal to `expected`.
@@ -160,7 +167,7 @@ Suppresses any calls to `console.log`, `console.warn`, `console.error`, etc. for
 ## TypeScript
 (Available in 1.3.7+) To write **aqa** test files TypeScript, you will need to enable source maps in your tsconfig.json.
 
-```json
+```jsonc
 "compilerOptions": {
   // Can be any other path, but .js files will need to be emitted
   "outDir": "./dist",   
@@ -176,16 +183,17 @@ For an optimal development flow, run the following tasks (add them to `package.j
 Now let's create a file named *your.tests.ts*:
 ```ts
 import test = require('aqa')
+import myLib from './my-lib'
 
 test('Should fail', t => {
-    t.true(false);
+    t.is(myLib.add(1, 1), 3)
 })
 ```
 
 This will fail with something like the following output:
 ```
 FAILED:  "Should fail"
-D:\DEV\YourProject\tests\your.tests.ts:5:10 [SourceMap]
+D:\DEV\YourProject\tests\your.tests.ts:6:10 [SourceMap]
 ```
 
 Note the source-mapped location. This will allow you to Ctrl+Click on the location in your IDE to easily jump to the original test file.
