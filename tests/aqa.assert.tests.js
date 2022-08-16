@@ -168,17 +168,17 @@ test('Assert fail messages', async t => {
     t.is(e.message, "Expected 2, got 1")
 
     e = t.throws(_ => t.is("1", 1))
-    t.is(e.message, "Expected 1, got \"1\"")
+    t.is(e.message, "Expected 1, got '1'")
 
     e = t.throws(_ => t.is("1", "2"))
-    t.is(e.message, "Expected \"2\", got \"1\"")
+    t.is(e.message, "Expected '2', got '1'")
 
     // not
     e = t.throws(_ => t.not(1, 1))
     t.is(e.message, "Expected something other than 1, but got 1")
 
     e = t.throws(_ => t.not("1", "1"))
-    t.is(e.message, "Expected something other than \"1\", but got \"1\"")
+    t.is(e.message, "Expected something other than '1', but got '1'")
 
     // near
     e = t.throws(_ => t.near(1, 2, 0.1))

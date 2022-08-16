@@ -15,7 +15,10 @@ const _backupItems = ['process', 'console'];
 const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
 const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b]));
-const errorMatcher = /at .* \((.*):(\d+):(\d+)/;
+const errorMatchers = [
+    /at\W\S*\W\((.*):(\d+):(\d+)\)/,
+    /at (.*):(\d+):(\d+)/
+];
 
 const tests = [];
 
@@ -74,7 +77,7 @@ function getFilePosition(file, line, col) {
     if (exists) {
         try {
             let rawSourceMap = JSON.parse(fs.readFileSync(mapFile).toString());
-            let mapped = common.mapSourceLocation(line, col, rawSourceMap.mappings, rawSourceMap.sources, rawSourceMap.names);            
+            let mapped = common.mapSourceLocation(line, col, rawSourceMap.mappings, rawSourceMap.sources, rawSourceMap.names);
             let fileDir = path.dirname(file);
             let mapFilePath = path.join(fileDir, mapped.source);
             return `${mapFilePath}:${mapped.line}:${mapped.column} [SourceMap]`;
@@ -82,9 +85,21 @@ function getFilePosition(file, line, col) {
             console.log("Couldn't map source location", e);
         }
     }
-    
+
     // Return default file:line:col
     return `${file}:${line}:${col}`;
+}
+
+function parseError(line) {
+    for (let matcher of errorMatchers) {
+        let match = line.match(matcher);
+        if (match) return {
+            file: match[1],
+            line: parseInt(match[2]),
+            column: parseInt(match[3])
+        };
+    }
+    return null;
 }
 
 function getCallerFromStack(e) {
@@ -96,8 +111,12 @@ function getCallerFromStack(e) {
     stack = stack.replace(e.message, ''); // Stack repeats the message
     let lines = stack.split('\n').map(s => s.trim());
     let probableCause = lines.find(l => l.includes(testScriptFilename));
-    let [_, file, line, col] = probableCause.match(errorMatcher);
-    return getFilePosition(file, line, col);
+    let parsedError = parseError(probableCause);
+    if (parsedError !== null) {
+        let { file, line, column } = parsedError;
+        return getFilePosition(file, line, column);
+    }
+    return probableCause;
 }
 
 function getSimplifiedStack(e) {
@@ -127,11 +146,6 @@ function smartify(o) {
         maxArrayLength: Infinity,
         depth: Infinity
     });
-}
-
-function quoteIfString(s) {
-    if (typeof s === 'string') return `"${s}"`;
-    return s;
 }
 
 function getStringDiff(a, b) {
@@ -201,24 +215,24 @@ function pathToString(path) {
 class Asserts {
     is(actual, expected, message = "") {
         if (!areEqual(actual, expected)) {
-            throw new Error(`Expected ${quoteIfString(expected)}, got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
+            throw new Error(`Expected ${smartify(expected)}, got ${smartify(actual)} ${prefixMessage(message)}`.trim());
         }
     }
     not(actual, expected, message = "") {
         if (areEqual(actual, expected)) {
-            throw new Error(`Expected something other than ${quoteIfString(expected)}, but got ${quoteIfString(actual)} ${prefixMessage(message)}`.trim());
+            throw new Error(`Expected something other than ${smartify(expected)}, but got ${smartify(actual)} ${prefixMessage(message)}`.trim());
         }
     }
     near(actual, expected, delta, message = "") {
         if (!isNear(actual, expected, delta)) {
             let diff = actual - expected;
-            throw new Error(`Expected ${quoteIfString(expected)} +/- ${Math.abs(delta)}, got ${quoteIfString(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
+            throw new Error(`Expected ${smartify(expected)} +/- ${Math.abs(delta)}, got ${smartify(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
         }
     }
     notNear(actual, expected, delta, message = "") {
         if (isNear(actual, expected, delta)) {
             let diff = actual - expected;
-            throw new Error(`Expected something other than ${quoteIfString(expected)} +/- ${Math.abs(delta)}, but got ${quoteIfString(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
+            throw new Error(`Expected something other than ${smartify(expected)} +/- ${Math.abs(delta)}, but got ${smartify(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
         }
     }
     deepEqual(actual, expected, message = "", _equality = false) {
