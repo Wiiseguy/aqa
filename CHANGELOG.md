@@ -2,11 +2,13 @@
 
 ## 2022
 
-### [1.3.8] (TBD)
+### [1.3.8] (20-aug-2022)
 - Added strict check for the type of the equality param of `deepEqual`
-- README improvements
+- Improved examples in README
 - Fixed error line matching in stack traces
 - Removed some source code to leverage more of Node's `util.inspect`, like BigInt rendering
+- Added Coverage documentation to README
+- Caching of Source Maps
 
 ### [1.3.7] (14-aug-2022)
 - Added Source Map support

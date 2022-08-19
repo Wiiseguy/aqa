@@ -77,6 +77,41 @@ Like with the `test` script, you can watch files other than `*.test.js`:
 
 <br>
 
+## Coverage
+**aqa** can be easily integrated with coverage tools such as [nyc](https://github.com/istanbuljs/nyc) and [c8](https://github.com/bcoe/c8). 
+
+To enable coverage with [c8](https://github.com/bcoe/c8), add the following to your package.json:
+```jsonc
+"scripts": {
+  // Other scripts
+  "test:coverage": "c8 npm test"
+},
+```
+Or to run tests with [nyc](https://github.com/istanbuljs/nyc):
+```jsonc
+"scripts": {
+  // Other scripts
+  "test:coverage": "nyc aqa"
+},
+```
+
+Running `test:coverage` will produce something like this:
+```
+--------------|---------|----------|---------|---------|-----------------------
+File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+--------------|---------|----------|---------|---------|-----------------------
+All files     |    99.2 |    96.63 |   98.57 |    99.2 | 
+ my-lib.js    |   97.74 |    95.18 |   98.55 |   97.74 | 20-21,190-191,231-232
+ test.js      |     100 |      100 |     100 |     100 | 
+--------------|---------|----------|---------|---------|-----------------------
+```
+
+To add special reporters such as LCOV and HTML, check the README pages of the code coverage package.
+
+> Note: [c8](https://github.com/bcoe/c8) is recommended, as it is many times faster than [nyc](https://github.com/istanbuljs/nyc), because uses Node's built-in [V8 coverage tools](https://nodejs.org/dist/latest-v18.x/docs/api/cli.html#node_v8_coveragedir).
+
+<br>
+
 ## API
 ### Assertion
 The callback parameter for `test()` wraps many assertion methods (in this case `t`):

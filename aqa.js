@@ -51,6 +51,8 @@ const suppressedConsole = Object.freeze({
     profileEnd: nop
 });
 
+let cachedSourceMap = new Map();
+
 /**
  * Queue a test to be run.
  * @param {string} testName 
@@ -70,14 +72,25 @@ aqa.ignoreExtra = function (value) {
     return new IgnoreExtra(value);
 };
 
-function getFilePosition(file, line, col) {
-    // Check if a Source Map is available
+function getSourceMap(file) {
+    if (cachedSourceMap.has(file)) return cachedSourceMap.get(file);
+
     let mapFile = file + '.map';
     let exists = fs.existsSync(mapFile);
     if (exists) {
+        let sourceMap = JSON.parse(fs.readFileSync(mapFile).toString());
+        cachedSourceMap.set(file, sourceMap);
+        return sourceMap;
+    }
+    return null;
+}
+
+function getFilePosition(file, line, col) {
+    // Check if a Source Map is available
+    let sourceMap = getSourceMap(file);
+    if (sourceMap) {
         try {
-            let rawSourceMap = JSON.parse(fs.readFileSync(mapFile).toString());
-            let mapped = common.mapSourceLocation(line, col, rawSourceMap.mappings, rawSourceMap.sources, rawSourceMap.names);
+            let mapped = common.mapSourceLocation(line, col, sourceMap.mappings, sourceMap.sources, sourceMap.names);
             let fileDir = path.dirname(file);
             let mapFilePath = path.join(fileDir, mapped.source);
             return `${mapFilePath}:${mapped.line}:${mapped.column} [SourceMap]`;
