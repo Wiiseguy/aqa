@@ -1,6 +1,14 @@
 const test = require('../aqa');
 const common = require("../common");
 
+function delayPromise(ms, resolveValue) {
+    return new Promise((resolve) => {
+        setTimeout(_ =>
+            resolve(resolveValue),
+            ms);
+    });
+}
+
 test('Color.red', async t => {
     t.is(common.Color.red('abc'), "\x1b[31mabc\x1b[0m");
 })
@@ -25,6 +33,7 @@ test('escapeRegExp', async t => {
 
 test('microMatch', async t => {
     let sut = common.microMatch;
+    t.deepEqual(sut(''), null);
     t.deepEqual(sut('abc'), "abc");
     t.deepEqual(sut('abc.xyz'), "abc.xyz");
     t.deepEqual(sut('abc?'), /^abc?$/);
@@ -39,6 +48,7 @@ test('microMatch', async t => {
     t.deepEqual(sut('*tests\\file.js'), /^\S+tests\\file\.js$/);
     t.deepEqual(sut('*tests\\*.tests.js'), /^\S+tests\\\S+\.tests\.js$/);
     t.deepEqual(sut('tests?.js'), /^tests?\.js$/);
+    t.deepEqual(sut('tests.js'), 'tests.js');
     t.deepEqual(sut('*/_([^_])*/*'), /^\S+\\_([^_])*\\\S+$/);
 })
 
@@ -138,3 +148,30 @@ test('humanTime', async t => {
     t.is(sut(9999), "10.0s");
 })
 
+test('debounce', async t => {
+    const sut = common.debounce;
+
+    let callCount = 0;
+    let func = _ => callCount++;
+    let debouncedFunc = sut(func, 1);
+
+    t.is(callCount, 0);
+    func();
+    t.is(callCount, 1);
+
+    debouncedFunc();
+    t.is(callCount, 1);
+
+    await delayPromise(10);
+
+    t.is(callCount, 2);
+
+    debouncedFunc();
+    debouncedFunc();
+    debouncedFunc();
+    t.is(callCount, 2);
+
+    await delayPromise(10);
+
+    t.is(callCount, 3);
+})

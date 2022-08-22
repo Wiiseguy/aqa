@@ -1,3 +1,10 @@
+const fs = require("fs");
+const path = require("path");
+const readdir = fs.promises.readdir;
+
+const reSkip = /\\\.|\\node_modules/;
+const reEscape = /[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g;
+
 const Color = {
     red: s => `\x1b[31m${s}\x1b[0m`,
     green: s => `\x1b[32m${s}\x1b[0m`,
@@ -5,7 +12,7 @@ const Color = {
 };
 
 function escapeRegExp(s) {
-    return s.replace(/[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g, '\\$&');
+    return s.replace(reEscape, '\\$&');
 }
 
 function microMatch(s) {
@@ -59,6 +66,17 @@ function normalizeSlashes(str) {
     return str.replace(/\//g, '\\');
 }
 
+// Taken and modified from https://stackoverflow.com/a/45130990/1423052
+async function getFiles(dir) {
+    const dirents = await readdir(dir, { withFileTypes: true });
+    const files = await Promise.all(dirents.map((dirent) => {
+        const res = path.resolve(dir, dirent.name);
+        if (res.match(reSkip)) return;
+        return dirent.isDirectory() ? getFiles(res) : res;
+    }));
+    return Array.prototype.concat(...files).filter(n => n);
+}
+
 function filterFiles(files, matches = [], ignores = []) {
     return files
         .filter(f => {
@@ -91,6 +109,30 @@ function debounce(func, wait) {
     }
 }
 
+// Modified from https://advancedweb.hu/how-to-add-timeout-to-a-promise-in-javascript/ (Tamás Sallai)
+function timeout(prom, time, reason) {
+    let timer;
+    return Promise.race([
+        prom,
+        new Promise((_r, rej) => timer = setTimeout(() => rej(reason), time))
+    ]).finally(() => clearTimeout(timer));
+}
+
+function poll(fn, timeout, tries = 2) {
+    let n = 0;
+    return new Promise((resolve, _reject) => {
+        let interval = setInterval(_ => {
+            let fnResult = fn();
+            n++;
+            //console.log(`Polling ${n}...`, fn.toString());
+            if (fnResult || n > tries) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, timeout);
+    });
+}
+
 const REGEXP_TEST_FILES = [
     microMatch("*tests?.js"),
     microMatch("*/test-*.js"),
@@ -101,6 +143,7 @@ const REGEXP_TEST_FILES = [
 
 const REGEXP_IGNORE_FILES = [
     microMatch("node_modules"),
+    microMatch("coverage"),
     microMatch("*/.([^.])*/*"), // directories that start with a single period .
     microMatch("*/_([^_])*/*"), // directories that start with a single underscore _
 ];
@@ -184,9 +227,12 @@ module.exports = {
 
     escapeRegExp,
     microMatch,
+    getFiles,
     filterFiles,
     humanTime,
     debounce,
+    timeout,
+    poll,
 
     mapSourceLocation,
 

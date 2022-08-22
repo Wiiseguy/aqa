@@ -93,7 +93,7 @@ test('deepEqual', t => {
 
     t.deepEqual(new Date(2000, 1, 1), new Date(2000, 1, 1));
     t.deepEqual(new Set([1, 2, 3]), new Set([1, 2, 3]))
-
+    t.deepEqual(new RegExp("(a|b|c)"), /(a|b|c)/);
 })
 
 test('notDeepEqual', t => {
@@ -127,7 +127,7 @@ test('notDeepEqual', t => {
 
     t.notDeepEqual(new Date(2021, 1, 1), new Date(2000, 1, 1));
     t.notDeepEqual(new Set([1, 2, 3]), new Set([1, 2, 4]))
-
+    t.notDeepEqual(new RegExp("(a|b|c)"), /(a|b|d)/);
 })
 
 test('throws', t => {
@@ -207,6 +207,39 @@ test('Assert fail messages', async t => {
     t.is(e.message, "Expected something other than 0 +/- 1, but got 1 (difference: +1) : B")
 
     // deepEqual
+    e = t.throws(_ => t.deepEqual(null, undefined))
+    t.is(e.message, 'Difference found at path: (root)\n- null\n+ undefined')
+
+    e = t.throws(_ => t.deepEqual(undefined, null))
+    t.is(e.message, 'Difference found at path: (root)\n- undefined\n+ null')
+
+    e = t.throws(_ => t.deepEqual(NaN, 1))
+    t.is(e.message, 'Difference found at path: (root)\n- NaN\n+ 1')
+
+    e = t.throws(_ => t.deepEqual(1, NaN))
+    t.is(e.message, 'Difference found at path: (root)\n- 1\n+ NaN')
+
+    e = t.throws(_ => t.deepEqual(1, 2))
+    t.is(e.message, 'Difference found at path: (root)\n- 1\n+ 2')
+
+    e = t.throws(_ => t.deepEqual('a', 'b'))
+    t.is(e.message, "Difference found at path: (root)\n- 'a'\n+ 'b'")
+
+    e = t.throws(_ => t.deepEqual('a\nb', 'a'))
+    t.is(e.message, "Difference found at path: (root)\n- 'a\\nb'\n+ 'a'")
+
+    e = t.throws(_ => t.deepEqual('a', 'a\nb'))
+    t.is(e.message, "Difference found at path: (root)\n- 'a'\n+ 'a\\nb'")
+
+    e = t.throws(_ => t.deepEqual('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nb\nc\nd\ne', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nc\nb\nd\ne'))
+    t.is(e.message, 'Difference found at path: (root)\n' +
+    "-   'b\\n' +\n" +
+    "  'c\\n' +\n" +
+    "  'd\\n' +\n" +
+    "+   'c\\n' +\n" +
+    "  'b\\n' +\n" +
+    "  'd\\n' +")
+
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }))
     t.is(e.message, "Difference found at path: a\n- 1\n+ 2")
 

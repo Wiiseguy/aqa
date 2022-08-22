@@ -7,7 +7,7 @@ const path = require('path');
 
 const common = require("./common");
 const [, , ...args] = process.argv;
-const testScriptFilename = process.mainModule ? process.mainModule.filename : process.argv[1];
+const testScriptFilename = require.main ? require.main.filename : process.argv[1];
 const thisFilename = __filename;
 
 const STRING_DIFF_MAX_LINES = 3;
@@ -137,11 +137,8 @@ function getSimplifiedStack(e) {
     stack = stack.replace(e.message, ''); // Stack repeats the message
     let lines = stack
         .split('\n')
-        .slice(1)
-        //.map(s => s.trim())
+        .slice(1) // Remove the first line, which is the origin
         .filter(s => !s.includes(thisFilename));
-
-    if (lines.length <= 1) return '';
 
     return lines.join('\n');
 }
@@ -164,7 +161,7 @@ function smartify(o) {
 function getStringDiff(a, b) {
     let linesA = a.split('\n');
     let linesB = b.split('\n');
-
+    
     for (let i = 0; i < linesA.length; i++) {
         let la = linesA[i];
         let lb = linesB[i];
@@ -174,7 +171,7 @@ function getStringDiff(a, b) {
             return [
                 linesA.slice(i, lai).join('\n'),
                 linesB.slice(i, lbi).join('\n')
-            ]
+            ];
         }
     }
     return [a, b]
@@ -429,7 +426,7 @@ class Asserts {
     disableLogging() {
         global.console = suppressedConsole;
     }
-    log() { }
+    log(_s) { }
 }
 
 const t = new Asserts();
@@ -485,7 +482,7 @@ setImmediate(async function aqa_tests_runner() {
             console.error(errorMessage);
             let stack = getSimplifiedStack(caughtException);
             if (stack) {
-                console.error(common.Color.gray(getSimplifiedStack(caughtException)));
+                console.error(common.Color.gray(stack));
             }
             console.error('');
         }
@@ -498,7 +495,7 @@ setImmediate(async function aqa_tests_runner() {
     const elapsedMs = +new Date - startMs;
 
     if (fails === 0) {
-        console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} succesfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     } else {
         console.error(common.Color.red(` ${fails} test failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         process.exit(1);

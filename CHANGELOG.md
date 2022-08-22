@@ -2,12 +2,18 @@
 
 ## 2022
 
+### [1.4.0] (TBD)
+- Added support for globs for `--watch`
+- Added tests to increase code coverage to 95%
+- Code split of CLI
+- Removed the undocumented `--tap` feature
+
 ### [1.3.8] (20-aug-2022)
 - Added strict check for the type of the equality param of `deepEqual`
+- Added Coverage documentation to README
 - Improved examples in README
 - Fixed error line matching in stack traces
 - Removed some source code to leverage more of Node's `util.inspect`, like BigInt rendering
-- Added Coverage documentation to README
 - Caching of Source Maps
 
 ### [1.3.7] (14-aug-2022)
@@ -31,7 +37,7 @@
 - Removed inspect limitations
 
 ### [1.3.1] (08-apr-2022)
-- Added t.near() + t.notNear()
+- Added `t.near()` + `t.notNear()`
 - Added more granular unit tests
 
 ### [1.3.0] (07-apr-2022)

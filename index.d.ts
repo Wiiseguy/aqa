@@ -17,6 +17,6 @@ declare class Asserts {
     throwsAsync(fn: any, opts: any, message?: string): Promise<any>;
     notThrowsAsync(fn: any, message?: string): Promise<void>;
     disableLogging(): void;
-    log(): void;
+    log(s?: any): void;
 }
 export = aqa;

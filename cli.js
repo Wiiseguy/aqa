@@ -1,45 +1,36 @@
 #!/usr/bin/env node
 
 const util = require("util");
-const fs = require("fs");
 const path = require("path");
 const child_process = require("child_process");
 const common = require("./common");
+const { watchFiles } = require("./cli.watch");
 
 const exec = util.promisify(child_process.exec);
-const readdir = fs.promises.readdir;
 
 const [, , ...args] = process.argv
 const cwd = process.cwd();
 const cwds = path.join(cwd, '/');
 
-const debounceTimeout = 500;
+const MAX_TEST_TIME_MS = 10000;
 
 // RegExps
-const reSkip = /\\\.|\\node_modules/;
-const reJsFile = /\.js$/;
 const reNumTestExtract = /(\d+) test/;
 
 let isVerbose = false;
-let isTap = false;
 
 async function main() {
-    //console.log(`Args: ${args}`)
-    //console.log(`Called from: ${cwd}`)
-    //console.log(`Script located at: ${__dirname}`);
-
     let arg0 = args.filter(a => !a.startsWith('-'))[0]; // First non-flag argument
 
     isVerbose = args.includes('--verbose');
-    isTap = args.includes('--tap');
     let isWatch = args.includes('--watch');
 
     if (isWatch) {
         // Watch files and run tests when changed
-        watchFiles();
+        watchFiles(arg0, runTests, isVerbose);
     } else {
         let testsFiles = [];
-        let allFiles = await getFiles(cwd);
+        let allFiles = await common.getFiles(cwd);
 
         if (arg0) { // Param is file/glob
             let reGlob = common.microMatch(arg0);
@@ -65,105 +56,6 @@ async function main() {
     }
 }
 
-async function watchFiles() {
-    let testsFiles = [];
-    let nonTestFiles = [];
-    let fileWatchers = [];
-
-    // Watch
-    const watch = (file, callback) => {
-        let watcher = fs.watch(file, callback);
-        fileWatchers.push(watcher);
-    };
-
-    // Collect & debounce
-    let requestTimeout;
-    let requested = [];
-    const requestRun = f => {
-        if (!requested.includes(f)) {
-            requested.push(f);
-        }
-        clearTimeout(requestTimeout);
-        requestTimeout = setTimeout(_ => {
-            console.log(' ');
-            console.log("[watch] Running tests for:", requested.map(r => path.basename(r)).join(', '));
-            runTests(requested);
-            requested.length = 0;
-        }, debounceTimeout);
-    };
-    const requestRuns = files => files.forEach(requestRun);
-
-    // Scan and watch
-    const scanAndWatch = common.debounce(async _ => {
-        clearTimeout(requestTimeout);
-        fileWatchers.forEach(w => w.close());
-        fileWatchers.length = 0;        
-
-        let allFiles = await getFiles(cwd);
-        testsFiles = filterTestFiles(allFiles);
-        nonTestFiles = allFiles.filter(f => f.match(reJsFile) && !testsFiles.includes(f));
-        //console.log('***** (re)scan triggered', { testsFiles, nonTestFiles })
-
-        // Watch test files
-        testsFiles.forEach(tf => {
-            watch(tf, (type, fileName) => {
-                if (isVerbose) {
-                    console.log('Watch triggered for test file:', type, fileName);
-                }
-                requestRun(tf);
-            })
-        });
-
-        // Watch non-test files and simply run all tests when these change
-        nonTestFiles.forEach(ntf => {
-            watch(ntf, (type, fileName) => {
-                let ext = path.extname(fileName);
-                let base = path.basename(fileName, ext);
-                if (isVerbose) {
-                    console.log('Watch triggered for non-test file:', type, fileName);
-                }
-
-                let relevantTestFiles = testsFiles.filter(tf => path.basename(tf).startsWith(base));
-                if (relevantTestFiles.length > 0) {
-                    requestRuns(relevantTestFiles);
-                } else {
-                    // Test all files
-                    requestRuns(testsFiles);
-                }
-            })
-        });
-    }, debounceTimeout);
-
-    // Watch dir
-    fs.watch(cwd, { recursive: true }, (type, fileName) => {
-        if (fileName == null) {
-            //console.warn('Empty filename detected in fs.watch:', { type, fileName });
-            return;
-        }
-        let resolvedFileName = path.join(cwd, fileName);
-        if (isVerbose) {
-            console.log('Watch triggered for dir:', type, cwd, resolvedFileName);
-        }
-
-        let filtered = common.filterFiles([resolvedFileName], [reJsFile], common.REGEXP_IGNORE_FILES);
-
-        if (filtered.length === 0) return;
-
-        if (!testsFiles.includes(resolvedFileName) && !nonTestFiles.includes(resolvedFileName)) {
-            clearTimeout(requestTimeout);
-            requested.length = 0;
-            scanAndWatch();
-        }
-
-    })
-
-    console.log("[watch] aqa - watcher active, waiting for file changes...");
-    scanAndWatch();
-
-    // Initial run
-    //testsFiles.forEach(tf => requestRun(tf));
-}
-
 async function runTests(filesToTest) {
     //console.log("Running:", filesToTest)
     const startMs = +new Date;
@@ -181,10 +73,10 @@ async function runTests(filesToTest) {
     // Execute tests
     for (let task of tasks) {
         try {
-            task.result = await task.exec();
-
+            task.result = await common.timeout(task.exec(), MAX_TEST_TIME_MS, { stdout: '', stderr: `Timeout exceeded while waiting for ${task.name}` });
         } catch (e) {
             task.result = e;
+            task.result.code = 1;
         }
     }
 
@@ -195,24 +87,20 @@ async function runTests(filesToTest) {
     tasks.forEach(m => {
         let result = m.result;
 
-        let relevantOutput = result.stdout;
+        let relevantOutput = result.stdout || '';
 
         if (result.code === 1) {
-            if (isTap) {
-                failed.push({ name: m.name, result })
+            let lastLine = getLastLine(result.stderr);
+            let numTests = extractNumTests(lastLine);
+            if (numTests === -1) {
+                numFailed += 1;
+                failed.push({ name: m.name, result, fatal: true });
             } else {
-                let lastLine = getLastLine(result.stderr);
-                let numTests = extractNumTests(lastLine);
-                if (numTests === -1) {
-                    numFailed += 1;
-                    failed.push({ name: m.name, result, fatal: true });
-                } else {
-                    numFailed += numTests;
-                    failed.push({ name: m.name, result })
-                }
+                numFailed += numTests;
+                failed.push({ name: m.name, result })
             }
         }
-        else if (result.stdout && !isTap) {
+        else if (result.stdout) {
             let lastLine = getLastLine(result.stdout);
             numOk += extractNumTests(lastLine);
             relevantOutput = withoutLastLine(result.stdout) + '\n' + result.stderr;
@@ -221,7 +109,7 @@ async function runTests(filesToTest) {
         relevantOutput = relevantOutput.trim();
 
         if (relevantOutput) {
-            if (!isTap) console.log(`[${m.name}]`);
+            console.log(`[${m.name}]`);
             console.log(relevantOutput);
         }
     });
@@ -230,23 +118,21 @@ async function runTests(filesToTest) {
     let elapsedMs = +new Date - startMs;
 
     // Output results
-    if (!isTap) {
-        console.log();
-        if (failed.length === 0) {
-            console.log(common.Color.green(` Ran ${numOk} test${numOk === 1 ? '' : 's'} succesfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
-        } else {
-            failed.forEach(f => {
-                if (f.fatal) {
-                    console.log(common.Color.red("Fatal error:"), f.result.stderr)
-                } else {
-                    //console.log('  ', common.Color.gray(path.relative(cwd, f.name) + ':'));
-                    console.log(withoutLastLine(f.result.stderr));
-                }
-                console.log(' ');
-            });
+    console.log();
+    if (failed.length === 0) {
+        console.log(common.Color.green(` Ran ${numOk} test${numOk === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+    } else {
+        failed.forEach(f => {
+            if (f.fatal) {
+                console.log(common.Color.red("Fatal error:"), f.result.stderr)
+            } else {
+                //console.log('  ', common.Color.gray(path.relative(cwd, f.name) + ':'));
+                console.log(withoutLastLine(f.result.stderr));
+            }
+            console.log(' ');
+        });
 
-            console.log(common.Color.red(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
-        }
+        console.log(common.Color.red(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     }
 
     return { failed };
@@ -275,17 +161,6 @@ function extractNumTests(str) {
         return Number(matches[1]);
     }
     return -1;
-}
-
-// Taken and modified from https://stackoverflow.com/a/45130990/1423052
-async function getFiles(dir) {
-    const dirents = await readdir(dir, { withFileTypes: true });
-    const files = await Promise.all(dirents.map((dirent) => {
-        const res = path.resolve(dir, dirent.name);
-        if (res.match(reSkip)) return;
-        return dirent.isDirectory() ? getFiles(res) : res;
-    }));
-    return Array.prototype.concat(...files).filter(n => n);
 }
 
 main();
