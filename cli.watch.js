@@ -29,8 +29,6 @@ async function watchFiles(arg0, runTests, isVerbose) {
         custom = true;
     }
 
-    //console.log({arg0, arg0m: common.microMatch(arg0), custom, testsFiles});
-
     // Watch
     const watch = (file, callback) => {
         let watcher = fs.watch(file, callback);
@@ -66,7 +64,6 @@ async function watchFiles(arg0, runTests, isVerbose) {
         }
         nonTestFiles = allFiles.filter(f => !testsFiles.includes(f));
         nonTestFiles = common.filterFiles(nonTestFiles, [reJsFile], common.REGEXP_IGNORE_FILES);
-        //console.log('***** (re)scan triggered', { testsFiles, nonTestFiles })
 
         // Watch test files
         testsFiles.forEach(tf => {
@@ -103,7 +100,6 @@ async function watchFiles(arg0, runTests, isVerbose) {
     // Watch dir
     fs.watch(cwd, { recursive: true }, (type, fileName) => {
         if (fileName == null) {
-            //console.warn('Empty filename detected in fs.watch:', { type, fileName });
             return;
         }
         let resolvedFileName = path.join(cwd, fileName);

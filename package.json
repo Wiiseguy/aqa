@@ -5,6 +5,7 @@
   "main": "aqa.js",
   "scripts": {
     "test": "node cli",
+    "test:verbose": "node cli --verbose",
     "watch": "node cli --watch",
     "watch:verbose": "node cli --watch --verbose"
   },
@@ -36,12 +37,17 @@
     "assert",
     "assertion",
     "unit",
-    "expect"
+    "expect",
+    "coverage",
+    "sourcemap"
   ],
   "author": "Wiiseguy",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Wiiseguy/aqa/issues"
   },
-  "homepage": "https://github.com/Wiiseguy/aqa#readme"
+  "homepage": "https://github.com/Wiiseguy/aqa#readme",
+  "aqa": {
+    
+  }
 }

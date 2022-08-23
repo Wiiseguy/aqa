@@ -200,7 +200,7 @@ Suppresses any calls to `console.log`, `console.warn`, `console.error`, etc. for
 <br>
 
 ## TypeScript
-(Available in 1.3.7+) To write **aqa** test files TypeScript, you will need to enable source maps in your tsconfig.json.
+(Available in 1.3.7+) To write **aqa** test files TypeScript, you will need to enable source maps in your `tsconfig.json`.
 
 ```jsonc
 "compilerOptions": {
@@ -251,8 +251,3 @@ Adds verbose logging.
 Example: `aqa --verbose`
 
 <br>
-<br>
-
-## Work in progress:
-- Configuration in (nearest) package.json
-- TAP results

@@ -222,15 +222,22 @@ function pathToString(path) {
     }).join('') || '(root)';
 }
 
+function createDiffString(a, b) {
+    return [
+        common.Color.red('- ') + a,
+        common.Color.green('+ ') + b
+    ].join('\n')
+}
+
 class Asserts {
     is(actual, expected, message = "") {
         if (!areEqual(actual, expected)) {
-            throw new Error(`Expected ${smartify(expected)}, got ${smartify(actual)} ${prefixMessage(message)}`.trim());
+            throw new Error(`Actual value is not equal to expected:\n${createDiffString(smartify(actual), smartify(expected))}${prefixMessage(message, '\n')}`.trim());
         }
     }
     not(actual, expected, message = "") {
         if (areEqual(actual, expected)) {
-            throw new Error(`Expected something other than ${smartify(expected)}, but got ${smartify(actual)} ${prefixMessage(message)}`.trim());
+            throw new Error(`Actual value is equal to expected ${prefixMessage(message)}`.trim());
         }
     }
     near(actual, expected, delta, message = "") {
@@ -255,12 +262,7 @@ class Asserts {
                 b = stringDiff[1];
             }
             path.push({
-                differences: [
-                    '- ' + a,
-                    '+ ' + b
-                    //common.Color.gray('- ') + a,
-                    //common.Color.gray('+ ') + b
-                ]
+                differences: createDiffString(a, b)
             })
         };
 
@@ -336,13 +338,9 @@ class Asserts {
                 throw new Error(`No difference between actual and expected. ${prefixMessage(message)}`.trim());
             } else {
                 let last = path.pop();
-                let diff = [];
-                if (last.differences) {
-                    diff = last.differences;
-                }
-                let diffStr = diff.join('\n');
+                let diffStr = last.differences || '';
                 let pathString = pathToString(path);
-                throw new Error(`Difference found at path: ${pathString}\n${diffStr} ${prefixMessage(message, '\n')}`.trim());
+                throw new Error(`Difference found at path: ${pathString}\n${diffStr}${prefixMessage(message, '\n')}`.trim());
             }
         }
     }
@@ -432,7 +430,6 @@ class Asserts {
 const t = new Asserts();
 
 setImmediate(async function aqa_tests_runner() {
-    //console.log("aqa - starting tests", args);
     let isVerbose = args.includes('--verbose');
     const startMs = +new Date;
 
@@ -458,9 +455,8 @@ setImmediate(async function aqa_tests_runner() {
             caughtException = e;
             fails++;
             ok = false;
-            //console.error(e);
             testErrorLine = getCallerFromStack(e);
-            errorMessage = e.toString();// + ' \n' + getCallerFromStack(e);
+            errorMessage = e.toString();
         }
 
         // Restore potentially overwritten critical globals
@@ -472,7 +468,6 @@ setImmediate(async function aqa_tests_runner() {
         }
 
         if (ok) {
-            //console.log(`Success: "${test.name}"`);
             if (isVerbose) {
                 console.log(common.Color.green('OK'));
             }

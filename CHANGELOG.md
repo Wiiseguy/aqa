@@ -3,8 +3,19 @@
 ## 2022
 
 ### [1.4.0] (TBD)
+- Added support for `"aqa"` section in `package.json`
+  - Only `verbose` is supported for now: 
+  ```js
+  {
+    "aqa": {
+      "verbose": true
+    }
+  }
+    ```
 - Added support for globs for `--watch`
 - Added tests to increase code coverage to 95%
+- Added color for `-`/`+` difference notations on test failures
+- Changed `t.is()` to report differences similar to the same format as `t.deepEqual()`
 - Code split of CLI
 - Removed the undocumented `--tap` feature
 

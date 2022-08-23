@@ -19,4 +19,5 @@ declare class Asserts {
     disableLogging(): void;
     log(s?: any): void;
 }
+
 export = aqa;

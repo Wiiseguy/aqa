@@ -33,11 +33,3 @@ test('Async fail test', async t => {
 
     });
 });
-
-test('Log test', async t => {
-    //console.log("Hello", 1, 2, "arg3")
-})
-
-test('Log test 2', async t => {
-    //t.log("Hello", 1, 2, "arg3");
-})

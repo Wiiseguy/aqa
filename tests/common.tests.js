@@ -21,6 +21,15 @@ test('Color.gray', async t => {
     t.is(common.Color.gray('abc'), "\x1b[90mabc\x1b[0m");
 })
 
+test('Color.strip', async t => {
+    let str = ''
+        + common.Color.red('red') + '\r\n'
+        + common.Color.green('green') + ' - \n'
+        + common.Color.gray('gray');
+    
+    t.is(common.Color.strip(str), "red\r\ngreen - \ngray");
+})
+
 test('escapeRegExp', async t => {
     let sut = common.escapeRegExp;
     t.is(sut('abc'), "abc");

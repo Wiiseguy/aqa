@@ -5,13 +5,14 @@ const path = require("path");
 const child_process = require("child_process");
 const common = require("./common");
 const { watchFiles } = require("./cli.watch");
-
+const { existsSync, readFileSync } = require("fs");
 const exec = util.promisify(child_process.exec);
 
 const [, , ...args] = process.argv
 const cwd = process.cwd();
 const cwds = path.join(cwd, '/');
 
+const packagePath = './package.json'
 const MAX_TEST_TIME_MS = 10000;
 
 // RegExps
@@ -24,6 +25,25 @@ async function main() {
 
     isVerbose = args.includes('--verbose');
     let isWatch = args.includes('--watch');
+
+    // Read config from nearest package.json
+    if (existsSync(packagePath)) {
+        try {
+            let parsedPackage = JSON.parse(readFileSync(packagePath).toString());
+            if (parsedPackage?.aqa) {
+                /** @type {AqaPackageSection} */
+                let packageAqa = parsedPackage.aqa;
+
+                // Set values from the "aqa" section
+                isVerbose = isVerbose || packageAqa.verbose;
+
+            }
+        } catch (e) {
+            if (isVerbose) {
+                console.warn('Could not parse package.json');
+            }
+        }
+    }
 
     if (isWatch) {
         // Watch files and run tests when changed
@@ -57,7 +77,6 @@ async function main() {
 }
 
 async function runTests(filesToTest) {
-    //console.log("Running:", filesToTest)
     const startMs = +new Date;
     let testsFiles = filesToTest;
 
@@ -126,7 +145,6 @@ async function runTests(filesToTest) {
             if (f.fatal) {
                 console.log(common.Color.red("Fatal error:"), f.result.stderr)
             } else {
-                //console.log('  ', common.Color.gray(path.relative(cwd, f.name) + ':'));
                 console.log(withoutLastLine(f.result.stderr));
             }
             console.log(' ');

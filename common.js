@@ -4,11 +4,15 @@ const readdir = fs.promises.readdir;
 
 const reSkip = /\\\.|\\node_modules/;
 const reEscape = /[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g;
+const reColorStrip = /\x1b\[\d+m/g;
 
 const Color = {
     red: s => `\x1b[31m${s}\x1b[0m`,
     green: s => `\x1b[32m${s}\x1b[0m`,
-    gray: s => `\x1b[90m${s}\x1b[0m`
+    gray: s => `\x1b[90m${s}\x1b[0m`,
+    strip: s => {
+        return s.replace(reColorStrip, '');
+    }
 };
 
 function escapeRegExp(s) {
@@ -124,7 +128,6 @@ function poll(fn, timeout, tries = 2) {
         let interval = setInterval(_ => {
             let fnResult = fn();
             n++;
-            //console.log(`Polling ${n}...`, fn.toString());
             if (fnResult || n > tries) {
                 clearInterval(interval);
                 resolve();

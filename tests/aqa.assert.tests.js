@@ -1,9 +1,10 @@
 const test = require('../aqa');
+const { Color } = require('../common');
 
 test('is', t => {
     t.is(1, 1);
     t.is(1 + 1, 2);
-    t.is(0, -0);
+    t.is(0, -0);    
 })
 
 test('not', t => {
@@ -165,20 +166,26 @@ test('Assert fail messages', async t => {
 
     // is
     e = t.throws(_ => t.is(1, 2))
-    t.is(e.message, "Expected 2, got 1")
+    t.is(Color.strip(e.message), 'Actual value is not equal to expected:\n- 1\n+ 2')
 
     e = t.throws(_ => t.is("1", 1))
-    t.is(e.message, "Expected 1, got '1'")
+    t.is(Color.strip(e.message), "Actual value is not equal to expected:\n- '1'\n+ 1")
 
     e = t.throws(_ => t.is("1", "2"))
-    t.is(e.message, "Expected '2', got '1'")
+    t.is(Color.strip(e.message), "Actual value is not equal to expected:\n- '1'\n+ '2'")
+
+    e = t.throws(_ => t.is(1, 2, 'B'))
+    t.is(Color.strip(e.message), 'Actual value is not equal to expected:\n- 1\n+ 2\n B')
 
     // not
     e = t.throws(_ => t.not(1, 1))
-    t.is(e.message, "Expected something other than 1, but got 1")
+    t.is(e.message, 'Actual value is equal to expected')
 
     e = t.throws(_ => t.not("1", "1"))
-    t.is(e.message, "Expected something other than '1', but got '1'")
+    t.is(e.message, 'Actual value is equal to expected')
+
+    e = t.throws(_ => t.not(1, 1, 'B'))
+    t.is(e.message, 'Actual value is equal to expected : B')
 
     // near
     e = t.throws(_ => t.near(1, 2, 0.1))
@@ -208,31 +215,34 @@ test('Assert fail messages', async t => {
 
     // deepEqual
     e = t.throws(_ => t.deepEqual(null, undefined))
-    t.is(e.message, 'Difference found at path: (root)\n- null\n+ undefined')
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n- null\n+ undefined')
+
+    e = t.throws(_ => t.deepEqual(null, undefined, 'B' ))
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n- null\n+ undefined\n B')
 
     e = t.throws(_ => t.deepEqual(undefined, null))
-    t.is(e.message, 'Difference found at path: (root)\n- undefined\n+ null')
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n- undefined\n+ null')
 
     e = t.throws(_ => t.deepEqual(NaN, 1))
-    t.is(e.message, 'Difference found at path: (root)\n- NaN\n+ 1')
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n- NaN\n+ 1')
 
     e = t.throws(_ => t.deepEqual(1, NaN))
-    t.is(e.message, 'Difference found at path: (root)\n- 1\n+ NaN')
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n- 1\n+ NaN')
 
     e = t.throws(_ => t.deepEqual(1, 2))
-    t.is(e.message, 'Difference found at path: (root)\n- 1\n+ 2')
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n- 1\n+ 2')
 
     e = t.throws(_ => t.deepEqual('a', 'b'))
-    t.is(e.message, "Difference found at path: (root)\n- 'a'\n+ 'b'")
+    t.is(Color.strip(e.message), "Difference found at path: (root)\n- 'a'\n+ 'b'")
 
     e = t.throws(_ => t.deepEqual('a\nb', 'a'))
-    t.is(e.message, "Difference found at path: (root)\n- 'a\\nb'\n+ 'a'")
+    t.is(Color.strip(e.message), "Difference found at path: (root)\n- 'a\\nb'\n+ 'a'")
 
     e = t.throws(_ => t.deepEqual('a', 'a\nb'))
-    t.is(e.message, "Difference found at path: (root)\n- 'a'\n+ 'a\\nb'")
+    t.is(Color.strip(e.message), "Difference found at path: (root)\n- 'a'\n+ 'a\\nb'")
 
     e = t.throws(_ => t.deepEqual('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nb\nc\nd\ne', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nc\nb\nd\ne'))
-    t.is(e.message, 'Difference found at path: (root)\n' +
+    t.is(Color.strip(e.message), 'Difference found at path: (root)\n' +
     "-   'b\\n' +\n" +
     "  'c\\n' +\n" +
     "  'd\\n' +\n" +
@@ -241,34 +251,34 @@ test('Assert fail messages', async t => {
     "  'd\\n' +")
 
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }))
-    t.is(e.message, "Difference found at path: a\n- 1\n+ 2")
+    t.is(Color.strip(e.message), "Difference found at path: a\n- 1\n+ 2")
 
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 1, b: 2 }))
-    t.is(e.message, "Difference found at path: b\n- undefined\n+ 2")
+    t.is(Color.strip(e.message), "Difference found at path: b\n- undefined\n+ 2")
 
     e = t.throws(_ => t.deepEqual({ a: [1, 2, 3] }, { a: [1, 2, 4] }))
-    t.is(e.message, "Difference found at path: a[2]\n- 3\n+ 4")
+    t.is(Color.strip(e.message), "Difference found at path: a[2]\n- 3\n+ 4")
 
     e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ b: 1 })))
-    t.is(e.message, "Difference found at path: b\n- 2\n+ 1")
+    t.is(Color.strip(e.message), "Difference found at path: b\n- 2\n+ 1")
 
     e = t.throws(_ => t.deepEqual({ a: 1, b: 2 }, test.ignoreExtra({ c: 1 })))
-    t.is(e.message, "Difference found at path: c\n- undefined\n+ 1")
+    t.is(Color.strip(e.message), "Difference found at path: c\n- undefined\n+ 1")
 
     e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { a: 2 }))
-    t.deepEqual(e.message, 'Difference found at path: a\n- 1\n+ 2')
+    t.deepEqual(Color.strip(e.message), 'Difference found at path: a\n- 1\n+ 2')
 
     e = t.throws(_ => t.deepEqual({ a: 1 }, { get a() { return 2; } } ))
-    t.deepEqual(e.message, 'Difference found at path: a\n- 1\n+ 2')
+    t.deepEqual(Color.strip(e.message), 'Difference found at path: a\n- 1\n+ 2')
 
     e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { return 2; } } ))
-    t.deepEqual(e.message, 'Difference found at path: a\n- 1\n+ 2')
+    t.deepEqual(Color.strip(e.message), 'Difference found at path: a\n- 1\n+ 2')
 
     e = t.throws(_ => t.deepEqual({ get a() { throw Error('X'); } }, { get a() { return 2; } } ))
-    t.deepEqual(e.message, 'Error was thrown while comparing the path "a": X')
+    t.deepEqual(Color.strip(e.message), 'Error was thrown while comparing the path "a": X')
 
     e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { throw Error('X'); } } ))
-    t.deepEqual(e.message, 'Error was thrown while comparing the path "a": X')
+    t.deepEqual(Color.strip(e.message), 'Error was thrown while comparing the path "a": X')
 
     e = t.throws(_ => t.deepEqual({
         a: {
@@ -283,7 +293,7 @@ test('Assert fail messages', async t => {
             }]
         }
     }))
-    t.deepEqual(e.message, 'Error was thrown while comparing the path "a.b[0].c": X')
+    t.deepEqual(Color.strip(e.message), 'Error was thrown while comparing the path "a.b[0].c": X')
 
     /** @ts-ignore passing 1 for the equality param should not be considered 'true' */
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }, 'message', 1))
