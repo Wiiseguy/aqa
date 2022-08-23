@@ -2,6 +2,9 @@
 
 ## 2022
 
+### [1.4.1] (23-aug-2022)
+- Added Config section to README
+
 ### [1.4.0] (23-aug-2022)
 - Added support for `"aqa"` section in `package.json`
   - Only `verbose` is supported for now: 

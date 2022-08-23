@@ -251,3 +251,17 @@ Adds verbose logging.
 Example: `aqa --verbose`
 
 <br>
+
+## Config
+**aqa** will try to check the `package.json` from where it was ran from for a section named `"aqa"`.
+
+```jsonc
+{  
+  "aqa": {
+    "verbose": true
+  }
+}
+```
+
+Supported config:
+- `verbose` - If true, enables verbose output. (default = false)
