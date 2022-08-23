@@ -1,6 +1,6 @@
 {
   "name": "aqa",
-  "version": "1.3.8",
+  "version": "1.4.0",
   "description": "Dependency-less Test Runner for Node.js",
   "main": "aqa.js",
   "scripts": {
@@ -47,7 +47,5 @@
     "url": "https://github.com/Wiiseguy/aqa/issues"
   },
   "homepage": "https://github.com/Wiiseguy/aqa#readme",
-  "aqa": {
-    
-  }
+  "aqa": {}
 }
