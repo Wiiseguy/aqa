@@ -2,7 +2,7 @@
 
 ## 2022
 
-### [1.4.0] (TBD)
+### [1.4.0] (23-aug-2022)
 - Added support for `"aqa"` section in `package.json`
   - Only `verbose` is supported for now: 
   ```js
