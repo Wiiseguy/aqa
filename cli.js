@@ -49,7 +49,6 @@ async function main() {
     if (isWatch) {
         // Watch files and run tests when changed
         watchFiles(arg0, runTests, isVerbose);
-        console.log('watching mate')
     } else {
         let testsFiles = [];
         let allFiles = await common.getFiles(cwd);

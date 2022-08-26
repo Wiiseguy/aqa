@@ -8,6 +8,7 @@ const reColorStrip = /\x1b\[\d+m/g;
 
 const Color = {
     red: s => `\x1b[31m${s}\x1b[0m`,
+    yellow: s => `\x1b[33m${s}\x1b[0m`,
     green: s => `\x1b[32m${s}\x1b[0m`,
     gray: s => `\x1b[90m${s}\x1b[0m`,
     strip: s => {

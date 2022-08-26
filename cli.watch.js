@@ -106,26 +106,32 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
     }, debounceTimeout);
 
     // Watch dir
-    let dirWatcher = fs.watch(cwd, { recursive: true }, (type, fileName) => {
-        if (fileName == null) {
-            return;
-        }
-        let resolvedFileName = path.join(cwd, fileName);
-        if (isVerbose) {
-            console.log('Watch triggered for dir:', type, cwd, resolvedFileName);
-        }
+    let dirWatcher = null;
+    try {
+        dirWatcher = fs.watch(cwd, { recursive: true }, (type, fileName) => {
+            if (fileName == null) {
+                return;
+            }
+            let resolvedFileName = path.join(cwd, fileName);
+            if (isVerbose) {
+                console.log('Watch triggered for dir:', type, cwd, resolvedFileName);
+            }
 
-        let filtered = common.filterFiles([resolvedFileName], [reJsFile], common.REGEXP_IGNORE_FILES);
+            let filtered = common.filterFiles([resolvedFileName], [reJsFile], common.REGEXP_IGNORE_FILES);
 
-        if (filtered.length === 0) return;
+            if (filtered.length === 0) return;
 
-        if (!testsFiles.includes(resolvedFileName) && !nonTestFiles.includes(resolvedFileName)) {
-            clearTimeout(requestTimeout);
-            requested.length = 0;
-            console.log('New file detected:', resolvedFileName, '- rescanning');
-            scanAndWatch();
-        }
-    })
+            if (!testsFiles.includes(resolvedFileName) && !nonTestFiles.includes(resolvedFileName)) {
+                clearTimeout(requestTimeout);
+                requested.length = 0;
+                console.log('New file detected:', resolvedFileName, '- rescanning');
+                scanAndWatch();
+            }
+        })
+    } catch (e) {
+        // Recursive watch is probably not supported on this platform
+        console.log(common.Color.yellow('[watch] Warning: ' + e.message));
+    }
 
     scanAndWatch();
 
@@ -136,7 +142,9 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
         if (stopSignal) {
             stopSignal.stop = function () {
                 fileWatchers.forEach(w => w.close());
-                dirWatcher.close()
+                if (dirWatcher) {
+                    dirWatcher.close()
+                }
                 resolve();
             }
         }
