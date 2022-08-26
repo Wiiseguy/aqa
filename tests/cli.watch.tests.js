@@ -3,6 +3,10 @@ const common = require('../common')
 const fs = require('fs');
 const child_process = require("child_process");
 
+if (typeof AbortController === 'undefined') {
+    return;
+}
+
 function getAbortController() {
     if (typeof AbortController !== 'undefined') {
         return new AbortController();
@@ -31,12 +35,9 @@ test('Test Watch - specific file', async t => {
 
     await common.poll(_ => stdout.includes('success'), 100, 20);
 
-    console.log({ stdout });
     t.true(stdout.includes('Ran 1 test successfully!'))
 
     controller.abort();
-    exe.kill();
-    exe.unref()
 })
 
 test('Test Watch', async t => {
