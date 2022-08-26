@@ -1,4 +1,4 @@
-# aqa
+# aqa [![ci](https://github.com/Wiiseguy/aqa/actions/workflows/node.js.yml/badge.svg)](https://github.com/Wiiseguy/aqa/actions/workflows/node.js.yml)
 > Dependency-less Test Runner for Node.js
 
 **aqa** is a light-weight and **a** **q**uick **a**lternative to [ava](https://github.com/avajs/ava), with a similar API.

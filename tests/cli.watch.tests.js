@@ -3,7 +3,7 @@ const common = require('../common')
 const fs = require('fs');
 const child_process = require("child_process");
 
-// TODO: temporarily disabled these tests on ubutuntu (Github Actions ci)
+// TODO: temporarily disabled these tests on ubuntu (Github Actions ci)
 if (process.platform !== 'win32') {
     return;
 }
