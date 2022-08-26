@@ -112,9 +112,9 @@ async function runTests(filesToTest) {
             process.stdout.write(common.Color.green('✔ ' + task.basename))
         } catch (e) {
             task.result = e;
-            task.result.code ??= 1;
-            task.result.stdout ??= '';
-            task.result.stderr ??= '';
+            task.result.code = 1;
+            task.result.stdout = task.result.stdout || '';
+            task.result.stderr = task.result.stderr || '';
             common.clearLine();
             console.log(common.Color.red('❌ ' + task.basename))
         }
