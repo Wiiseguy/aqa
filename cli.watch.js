@@ -10,7 +10,7 @@ const debounceTimeout = 500;
 // RegExps
 const reJsFile = /\.js$/;
 
-async function watchFiles(arg0, runTests, isVerbose) {
+async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
     let testsFiles = [];
     let nonTestFiles = [];
     let fileWatchers = [];
@@ -99,10 +99,14 @@ async function watchFiles(arg0, runTests, isVerbose) {
         });
 
         console.log(common.Color.gray("[watch] aqa - watcher active, waiting for file changes..."));
+
+        if (typeof onScan === 'function') {
+            onScan(testsFiles, nonTestFiles);
+        }
     }, debounceTimeout);
 
     // Watch dir
-    fs.watch(cwd, { recursive: true }, (type, fileName) => {
+    let dirWatcher = fs.watch(cwd, { recursive: true }, (type, fileName) => {
         if (fileName == null) {
             return;
         }
@@ -121,13 +125,22 @@ async function watchFiles(arg0, runTests, isVerbose) {
             console.log('New file detected:', resolvedFileName, '- rescanning');
             scanAndWatch();
         }
-
     })
-    
+
     scanAndWatch();
 
     // Initial run
     //testsFiles.forEach(tf => requestRun(tf));
+
+    return new Promise((resolve) => {
+        if (stopSignal) {
+            stopSignal.stop = function () {
+                fileWatchers.forEach(w => w.close());
+                dirWatcher.close()
+                resolve();
+            }
+        }
+    });    
 }
 
 
