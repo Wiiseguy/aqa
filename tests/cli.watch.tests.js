@@ -7,6 +7,7 @@ function getAbortController() {
     if (typeof AbortController !== 'undefined') {
         return new AbortController();
     }
+    console.log("Shimmed AbortController");
     return { signal: undefined, abort() {} }
 }
 
