@@ -2,6 +2,12 @@
 
 ## 2022
 
+### [1.5.1] (26-aug-2022)
+- GitHub Action: CI + Coverage
+- Added watch tests / E2E watch tests
+- Fixed recursive directory watch not working on Linux
+- Fixed Node 14 support by not using fancy `??=` syntax anymore
+
 ### [1.5.0] (26-aug-2022)
 - HUGE speed improvement by running test files in parallel
   - In some cases up to 8x faster!
