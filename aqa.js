@@ -406,10 +406,7 @@ class Asserts {
         }
 
         if (caughtException) {
-            if (caughtException) {
-                this._throwsCheckType(caughtException, opts, message);
-                return caughtException;
-            }
+            this._throwsCheckType(caughtException, opts, message);
             return caughtException;
         }
         throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());

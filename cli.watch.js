@@ -1,3 +1,4 @@
+/* c8 ignore start */ // Remove this line when we've found a way to cover the bits of this code that do not work across all platforms
 const fs = require("fs");
 const path = require("path");
 const common = require("./common");
