@@ -13,12 +13,13 @@ const cwd = process.cwd();
 const cwds = path.join(cwd, '/');
 
 const packagePath = './package.json'
-const MAX_TEST_TIME_MS = 10000;
+const MAX_TEST_TIME_MS = 1000 * 60;
 
 // RegExps
 const reNumTestExtract = /(\d+) test/;
 
 let isVerbose = false;
+let isRunningTests = false;
 
 async function main() {
     let arg0 = args.filter(a => !a.startsWith('-'))[0]; // First non-flag argument
@@ -77,27 +78,49 @@ async function main() {
 }
 
 async function runTests(filesToTest) {
+    if (isRunningTests) {
+        if (isVerbose) {
+            console.log('Already running tests, try again later.');
+        }
+        return;
+    }
     const startMs = +new Date;
     let testsFiles = filesToTest;
+
+    const paramList = [];
+    if (isVerbose) paramList.push('--verbose');
+    const paramString = paramList.join(' ');
 
     let tasks = [];
     testsFiles.forEach(tf => {
         tasks.push({
             name: tf,
-            exec: _ => exec(`node ${tf} --cli ${isVerbose ? '--verbose' : ''}`),
+            basename: path.basename(tf),
+            exec: _ => exec(`node ${tf} ${paramString}`),
             result: null
         });
     });
 
     // Execute tests
-    for (let task of tasks) {
+    isRunningTests = true;
+    await Promise.all(tasks.map(async task => {
         try {
+            common.clearLine();
+            process.stdout.write(task.basename)
             task.result = await common.timeout(task.exec(), MAX_TEST_TIME_MS, { stdout: '', stderr: `Timeout exceeded while waiting for ${task.name}` });
+            common.clearLine();
+            process.stdout.write(common.Color.green('✔ ' + task.basename))
         } catch (e) {
             task.result = e;
-            task.result.code = 1;
+            task.result.code ??= 1;
+            task.result.stdout ??= '';
+            task.result.stderr ??= '';
+            common.clearLine();
+            console.log(common.Color.red('❌ ' + task.basename))
         }
-    }
+    }));
+    common.clearLine();
+    isRunningTests = false;
 
     // Check and handle results
     let numOk = 0;
@@ -128,7 +151,7 @@ async function runTests(filesToTest) {
         relevantOutput = relevantOutput.trim();
 
         if (relevantOutput) {
-            console.log(`[${m.name}]`);
+            console.log('[', common.Color.gray(m.basename), ']');
             console.log(relevantOutput);
         }
     });
@@ -139,7 +162,7 @@ async function runTests(filesToTest) {
     // Output results
     console.log();
     if (failed.length === 0) {
-        console.log(common.Color.green(` Ran ${numOk} test${numOk === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        console.log(common.Color.green(`✔ Ran ${numOk} test${numOk === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     } else {
         failed.forEach(f => {
             if (f.fatal) {
@@ -152,6 +175,7 @@ async function runTests(filesToTest) {
 
         console.log(common.Color.red(` ${numFailed} test${numFailed === 1 ? '' : 's'} failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     }
+    console.log();
 
     return { failed };
 }

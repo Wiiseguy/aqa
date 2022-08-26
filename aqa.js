@@ -359,6 +359,13 @@ class Asserts {
             throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
         }
     }
+    _throwsCheckType(caughtException, opts, message) {
+        if (opts.instanceOf) {
+            if (!(caughtException instanceof opts.instanceOf)) {
+                throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message, '\n')}`.trim());
+            }
+        }
+    }
     throws(fn, opts, message = "") {
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
@@ -372,11 +379,7 @@ class Asserts {
         }
 
         if (caughtException) {
-            if (opts.instanceOf) {
-                if (!(caughtException instanceof opts.instanceOf)) {
-                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message, '\n')}`.trim());
-                }
-            }
+            this._throwsCheckType(caughtException, opts, message);
             return caughtException;
         }
         throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
@@ -390,7 +393,7 @@ class Asserts {
             throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
     }
-    async throwsAsync(fn, opts, message = "") { // TODO: SPOD with throws?
+    async throwsAsync(fn, opts, message = "") { 
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
 
@@ -403,10 +406,9 @@ class Asserts {
         }
 
         if (caughtException) {
-            if (opts.instanceOf) {
-                if (!(caughtException instanceof opts.instanceOf)) {
-                    throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message)}`.trim());
-                }
+            if (caughtException) {
+                this._throwsCheckType(caughtException, opts, message);
+                return caughtException;
             }
             return caughtException;
         }

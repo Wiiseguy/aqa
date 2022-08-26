@@ -45,7 +45,11 @@ async function watchFiles(arg0, runTests, isVerbose) {
         clearTimeout(requestTimeout);
         requestTimeout = setTimeout(_ => {
             console.log(' ');
-            console.log("[watch] Running tests for:", requested.map(r => path.basename(r)).join(', '));
+            console.log(common.Color.gray("[watch] Changes detected, running tests..."));
+            if (isVerbose) {
+                console.log(requested.map(r => path.basename(r)).join(', '));
+            }
+            console.log(' ');
             runTests(requested);
             requested.length = 0;
         }, debounceTimeout);
@@ -94,7 +98,7 @@ async function watchFiles(arg0, runTests, isVerbose) {
             })
         });
 
-        console.log("[watch] aqa - watcher active, waiting for file changes...");
+        console.log(common.Color.gray("[watch] aqa - watcher active, waiting for file changes..."));
     }, debounceTimeout);
 
     // Watch dir

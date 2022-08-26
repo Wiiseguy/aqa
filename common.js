@@ -225,6 +225,13 @@ function mapSourceLocation(actualLine, actualColumn, mappings, sources, names) {
     return result;
 }
 
+function clearLine() {
+    if (process.stdout.isTTY) {
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+    }
+}
+
 module.exports = {
     Color,
 
@@ -238,6 +245,8 @@ module.exports = {
     poll,
 
     mapSourceLocation,
+
+    clearLine,
 
     REGEXP_TEST_FILES,
     REGEXP_IGNORE_FILES

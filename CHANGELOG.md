@@ -2,6 +2,11 @@
 
 ## 2022
 
+### [1.5.0] (26-aug-2022)
+- HUGE speed improvement by running test files in parallel
+  - In some cases up to 8x faster!
+- Prettier test feedback with ✔ and ❌
+
 ### [1.4.1] (23-aug-2022)
 - Added Config section to README
 

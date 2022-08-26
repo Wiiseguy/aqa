@@ -1,6 +1,7 @@
 const test = require('../aqa')
 const util = require("util");
 const child_process = require("child_process");
+const { Color } = require('../common');
 const exec = util.promisify(child_process.exec);
 
 test('Test should-succeed', async t => {
@@ -15,10 +16,11 @@ test('Test should-succeed - glob', async t => {
 
 test('Test should-succeed - verbose', async t => {
     let result = await exec(`node cli tests/_self/should-succeed --verbose`);
-    t.true(result.stdout.includes('Running tests for: tests/_self/should-succeed'))
-    t.true(result.stdout.includes('[tests/_self/should-succeed]'))
-    t.true(result.stdout.includes('Running test: "Should succeed'))
-    t.true(result.stdout.includes('Ran 1 test successfully!'))
+    let stdout = Color.strip(result.stdout);
+    t.true(stdout.includes('Running tests for: tests/_self/should-succeed'))
+    t.true(stdout.includes('[ should-succeed ]'))
+    t.true(stdout.includes('Running test: "Should succeed'))
+    t.true(stdout.includes('Ran 1 test successfully!'))
 })
 
 test('Test should-fail', async t => {
@@ -57,8 +59,7 @@ test('Test duplicate names', async t => {
 
 test('Test t.log', async t => {
     let result = await exec(`node cli tests/_self/log`);
-    let expected = '[tests/_self/log]\n' +
-        '[Log output for "Test 1":]\n' +
+    let expected = '[Log output for "Test 1":]\n' +
         'Hello\n' +
         '[Log output for "Test 2":]\n' +
         'World\n';
