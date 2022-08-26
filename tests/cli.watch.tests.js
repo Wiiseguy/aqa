@@ -3,8 +3,15 @@ const common = require('../common')
 const fs = require('fs');
 const child_process = require("child_process");
 
+function getAbortController() {
+    if (typeof AbortController !== 'undefined') {
+        return new AbortController();
+    }
+    return { signal: undefined, abort() {} }
+}
+
 test('Test Watch - specific file', async t => {
-    const controller = new AbortController();
+    const controller = getAbortController();
     const signal = controller.signal;
     let time = new Date;
     
@@ -31,7 +38,7 @@ test('Test Watch - specific file', async t => {
 })
 
 test('Test Watch', async t => {
-    const controller = new AbortController();
+    const controller = getAbortController();
     const signal = controller.signal;
     let stdout = '';
     let exe = child_process.exec('node cli --watch', { signal, timeout: 15000 });
@@ -44,7 +51,7 @@ test('Test Watch', async t => {
 })
 
 test('Test Watch - glob', async t => {
-    const controller = new AbortController();
+    const controller = getAbortController();
     const signal = controller.signal;
     let stdout = '';
     let exe = child_process.exec('node cli --watch *thr*.js', { signal, timeout: 15000 });
