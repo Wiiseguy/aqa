@@ -16,11 +16,15 @@ const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
 const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b]));
 const errorMatchers = [
-    /at\W\S*\W\((.*):(\d+):(\d+)\)/,
+    /at[^(]+\((.*):(\d+):(\d+)\)/,
     /at (.*):(\d+):(\d+)/
 ];
 
 const tests = [];
+const testsBefore = [];
+const testsAfter = [];
+const testsBeforeEach = [];
+const testsAfterEach = [];
 
 const throwsDefaultOpts = {};
 
@@ -70,6 +74,19 @@ function IgnoreExtra(value) {
 aqa.ignore = Symbol('aqa_ignore');
 aqa.ignoreExtra = function (value) {
     return new IgnoreExtra(value);
+};
+
+aqa.before = function (fn) {
+    testsBefore.push(fn);
+};
+aqa.after = function (fn) {
+    testsAfter.push(fn);
+};
+aqa.beforeEach = function (fn) {
+    testsBeforeEach.push(fn);
+};
+aqa.afterEach = function (fn) {
+    testsAfterEach.push(fn);
 };
 
 function getSourceMap(file) {
@@ -161,7 +178,7 @@ function smartify(o) {
 function getStringDiff(a, b) {
     let linesA = a.split('\n');
     let linesB = b.split('\n');
-    
+
     for (let i = 0; i < linesA.length; i++) {
         let la = linesA[i];
         let lb = linesB[i];
@@ -393,7 +410,7 @@ class Asserts {
             throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
         }
     }
-    async throwsAsync(fn, opts, message = "") { 
+    async throwsAsync(fn, opts, message = "") {
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
 
@@ -428,17 +445,48 @@ class Asserts {
 
 const t = new Asserts();
 
+function outputFailure(testName, caughtException) {
+    let testErrorLine = getCallerFromStack(caughtException);
+    let errorMessage = caughtException.toString();
+    console.error(common.Color.red(`FAILED: `), `"${testName}"`);
+    console.error(common.Color.gray(testErrorLine));
+    console.error(errorMessage);
+    let stack = getSimplifiedStack(caughtException);
+    if (stack) {
+        console.error(common.Color.gray(stack));
+    }
+    console.error('');
+}
+
 setImmediate(async function aqa_tests_runner() {
     let isVerbose = args.includes('--verbose');
     const startMs = +new Date;
 
     let fails = 0;
+    let beforeFailed = false;
+    let afterFailed = false;
+
+    // Run before-tests
+    for (let fn of testsBefore) {
+        try {
+            await fn(t);
+        } catch (e) {
+            beforeFailed = true;
+            outputFailure('before - skipping all tests in file', e);
+        }
+    }
+
     // Run tests
     for (let test of tests) {
+        if (beforeFailed) {
+            if (isVerbose) {
+                console.log(`Skipping: "${test.name}" because of failed before test`)
+            }
+            fails++;
+            continue;
+        }
         let ok = true;
-        let errorMessage = null;
         let caughtException = null;
-        let testErrorLine = '';
         let logs = [];
 
         let localT = Object.assign(t);
@@ -449,13 +497,22 @@ setImmediate(async function aqa_tests_runner() {
         }
 
         try {
+            // Run before-each-tests
+            for (let fn of testsBeforeEach) {
+                await fn(localT);
+            }
+
+            // Run actual test
             await test.fn(localT);
+
+            // Run after-each-tests
+            for (let fn of testsAfterEach) {
+                await fn(localT);
+            }
         } catch (e) {
             caughtException = e;
             fails++;
             ok = false;
-            testErrorLine = getCallerFromStack(e);
-            errorMessage = e.toString();
         }
 
         // Restore potentially overwritten critical globals
@@ -471,14 +528,7 @@ setImmediate(async function aqa_tests_runner() {
                 console.log(common.Color.green('OK'));
             }
         } else {
-            console.error(common.Color.red(`FAILED: `), `"${test.name}"`);
-            console.error(common.Color.gray(testErrorLine));
-            console.error(errorMessage);
-            let stack = getSimplifiedStack(caughtException);
-            if (stack) {
-                console.error(common.Color.gray(stack));
-            }
-            console.error('');
+            outputFailure(test.name, caughtException);
         }
 
         if (isVerbose) {
@@ -486,9 +536,19 @@ setImmediate(async function aqa_tests_runner() {
         }
     }
 
+    // Run after-tests
+    for (let fn of testsAfter) {
+        try {
+            await fn(t);
+        } catch (e) {
+            afterFailed = true;
+            outputFailure('after', e);
+        }
+    }
+
     const elapsedMs = +new Date - startMs;
 
-    if (fails === 0) {
+    if (fails === 0 && !beforeFailed && !afterFailed) {
         console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     } else {
         console.error(common.Color.red(` ${fails} test failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))

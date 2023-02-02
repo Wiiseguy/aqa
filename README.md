@@ -196,6 +196,31 @@ Similar to `console.log`, but helps you easily find for which test method you've
 #### `t.disableLogging()`
 Suppresses any calls to `console.log`, `console.warn`, `console.error`, etc. for the current testcase. Note that logging is enabled again automatically after the testcase has completed.
 
+### Hooks
+(Available in 1.6.0+) The following hooks are available:
+```js
+const test = require('aqa')
+
+test.before(t => {    
+  // Your set-up and assertions
+  // This is only ran once per test file
+})
+
+test.after(t => {    
+  // Your tear-down and assertions
+  // This is only ran once per test file
+})
+
+test.beforeEach(t => {    
+  // Your set-up and assertions
+  // This is ran before each test
+})
+
+test.afterEach(t => {    
+  // Your tear-down and assertions
+  // This is ran after each test
+})
+```
 
 <br>
 

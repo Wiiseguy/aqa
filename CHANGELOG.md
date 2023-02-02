@@ -1,5 +1,12 @@
 # **aqa** Changelog
 
+## 2023
+
+### [1.6.0] (02-feb-2023)
+- Added `before`, `after`, `beforeEach` and `afterEach` hooks
+- Exposed `Asserts` TypeScript interface
+- Fixed issue in error line matching
+
 ## 2022
 
 ### [1.5.1] (26-aug-2022)
