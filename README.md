@@ -53,10 +53,10 @@ tests.js
 **/__tests__/*.js
 ```
 
-If your test files are named differently, for instance *.spec.js, you can write your test script like this:
+If your test files are named differently, for instance *.unit-test.js, you can write your test script like this:
 ```json
 "scripts": {
-  "test": "aqa *.spec.js"
+  "test": "aqa *.unit-test.js"
 },
 ```
 
