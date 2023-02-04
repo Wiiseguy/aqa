@@ -2,6 +2,10 @@
 
 ## 2023
 
+
+### [1.6.2] (04-feb-2023)
+- Improved error reporting
+
 ### [1.6.1] (04-feb-2023)
 - Added reporting! The only supported reporter is JUnit for now.
 
