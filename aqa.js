@@ -20,6 +20,8 @@ const errorMatchers = [
     /at (.*):(\d+):(\d+)/
 ];
 
+const packageConfig = common.getPackageConfig();
+
 const tests = [];
 const testsBefore = [];
 const testsAfter = [];
@@ -458,13 +460,56 @@ function outputFailure(testName, caughtException) {
     console.error('');
 }
 
+/**
+ * 
+ * @param {TestResult} testResult 
+ */
+function outputReport(testResult) {
+    let reporter = (packageConfig.reporter || '').toLocaleLowerCase();
+    let result = '';
+    if (reporter === 'junit') {
+        const makeXmlSafe = (s) => {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+        };
+        result = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+            `<testsuites name="aqa tests" time="${testResult.duration / 1000}" tests="${testResult.numTests}" failures="${testResult.numFailedTests}">\n` +
+            `  <testsuite name="${makeXmlSafe(testResult.name)}" timestamp="${testResult.startTime.toISOString()}" tests="${testResult.numTests}" time="${testResult.duration / 1000}" failures="${testResult.numFailedTests}">\n` +
+            testResult.testCases.map(testCase => {
+                return `    <testcase name="${makeXmlSafe(testCase.name)}" time="${testCase.duration / 1000}" classname="${makeXmlSafe(testCase.name)}">\n` +
+                    (!testCase.success ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
+                    (testCase.skipped ?  `      <skipped></skipped>\n` : '') +
+                       `    </testcase>\n`;
+            }).join('') +
+            `  </testsuite>\n` +
+            `</testsuites>`;
+        let outputDir = packageConfig.reporterOptions?.outputDir || '';
+        let outputFileName = `test-result-${testResult.name}.xml`;
+        let outputPath = path.join(outputDir, outputFileName);
+        fs.mkdirSync(outputDir, { recursive: true });
+        fs.writeFileSync(outputPath, result);
+    }
+
+    return result;
+}
+
+
 setImmediate(async function aqa_tests_runner() {
-    let isVerbose = args.includes('--verbose');
+    let isVerbose = packageConfig.verbose || args.includes('--verbose');
     const startMs = +new Date;
 
     let fails = 0;
     let beforeFailed = false;
     let afterFailed = false;
+
+    /** @type {TestResult} */
+    const testResult = {
+        duration: 0,
+        startTime: new Date,
+        name: path.basename(testScriptFilename),
+        numFailedTests: 0,
+        numTests: 0,
+        testCases: []
+    };
 
     // Run before-tests
     for (let fn of testsBefore) {
@@ -478,7 +523,21 @@ setImmediate(async function aqa_tests_runner() {
 
     // Run tests
     for (let test of tests) {
+        /** @type {TestCaseResult} */
+        let testCaseResult = {
+            duration: 0,
+            startTime: new Date,
+            name: test.name,
+            failureMessage: null,
+            success: false,
+            skipped: false
+        };
+        testResult.testCases.push(testCaseResult);
+
+        let testStartMs = +new Date;
+
         if (beforeFailed) {
+            testCaseResult.skipped = true;
             if (isVerbose) {
                 console.log(`Skipping: "${test.name}" because of failed before test`)
             }
@@ -515,6 +574,12 @@ setImmediate(async function aqa_tests_runner() {
             ok = false;
         }
 
+        let elapsedTestMs = +new Date - testStartMs;
+
+        testCaseResult.success = ok;
+        testCaseResult.duration = elapsedTestMs;
+        testCaseResult.failureMessage = caughtException ? caughtException.stack : null;
+
         // Restore potentially overwritten critical globals
         _backupRestore();
 
@@ -547,6 +612,11 @@ setImmediate(async function aqa_tests_runner() {
     }
 
     const elapsedMs = +new Date - startMs;
+
+    testResult.duration = elapsedMs;
+    testResult.numFailedTests = fails;
+    testResult.numTests = tests.length;
+    outputReport(testResult);
 
     if (fails === 0 && !beforeFailed && !afterFailed) {
         console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))

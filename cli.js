@@ -5,14 +5,12 @@ const path = require("path");
 const child_process = require("child_process");
 const common = require("./common");
 const { watchFiles } = require("./cli.watch");
-const { existsSync, readFileSync } = require("fs");
 const exec = util.promisify(child_process.exec);
 
 const [, , ...args] = process.argv
 const cwd = process.cwd();
 const cwds = path.join(cwd, '/');
 
-const packagePath = './package.json'
 const MAX_TEST_TIME_MS = 1000 * 60;
 
 // RegExps
@@ -23,28 +21,16 @@ let isRunningTests = false;
 
 async function main() {
     let arg0 = args.filter(a => !a.startsWith('-'))[0]; // First non-flag argument
-
-    isVerbose = args.includes('--verbose');
+    
     let isWatch = args.includes('--watch');
 
     // Read config from nearest package.json
-    if (existsSync(packagePath)) {
-        try {
-            let parsedPackage = JSON.parse(readFileSync(packagePath).toString());
-            if (parsedPackage?.aqa) {
-                /** @type {AqaPackageSection} */
-                let packageAqa = parsedPackage.aqa;
+    let packageConfig = common.getPackageConfig();
+    isVerbose = packageConfig.verbose;
 
-                // Set values from the "aqa" section
-                isVerbose = isVerbose || packageAqa.verbose;
+    // Override config with command line flags
+    isVerbose = args.includes('--verbose');
 
-            }
-        } catch (e) {
-            if (isVerbose) {
-                console.warn('Could not parse package.json');
-            }
-        }
-    }
 
     if (isWatch) {
         // Watch files and run tests when changed

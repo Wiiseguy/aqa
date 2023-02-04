@@ -267,6 +267,22 @@ We've only covered TypeScript here, but if you're using another language that ha
 
 <br>
 
+## Reporting
+(Available in 1.6.1+) **aqa** supports reporting test results to a file. The current supported reporter is `junit`. To enable it, add the following to your `package.json`:
+```jsonc
+{  
+  "aqa": {
+    "reporter": "junit"
+  }
+}
+```
+
+This will generate a JUnit XML file for each test file in the `.aqa-output/reports` folder. You can then use this file in your CI/CD pipeline to generate reports.
+
+See [Config](#config) for more information.
+
+<br>
+
 ## CLI parameters
 **aqa** can be run from the terminal like `npx aqa tests/test-*.js` with the following supported parameters:
 #### `--watch`
@@ -283,10 +299,20 @@ Example: `aqa --verbose`
 ```jsonc
 {  
   "aqa": {
-    "verbose": true
+    "verbose": true,
+    "reporter": "",   
+    "reporterOptions": {
+      "outputDir": "test-results/" 
+    }
   }
 }
 ```
 
 Supported config:
 - `verbose` - If true, enables verbose output. (default = false)
+  - Can also be set via the `AQA_VERBOSE` environment variable.
+- `reporter` - The reporter to use, can only be `junit` for now. Default = "" (no reporter)
+  - Can also be set via the `AQA_REPORTER` environment variable.
+- `reporterOptions` - Options for the reporter. 
+  - `outputDir` - The output directory for the reporter. Default = ".aqa-output/reports"
+    - Can also be set via the `AQA_REPORTER_OUTPUT_DIR` environment variable.

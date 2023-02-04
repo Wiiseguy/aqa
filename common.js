@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const readdir = fs.promises.readdir;
 
+const packagePath = './package.json'
+
 const reSkip = /\\\.|\\node_modules/;
 const reEscape = /[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g;
 const reColorStrip = /\x1b\[\d+m/g;
@@ -15,6 +17,48 @@ const Color = {
         return s.replace(reColorStrip, '');
     }
 };
+
+/**
+ * 
+ * @returns {AqaPackageSection}
+ */
+function getPackageConfig() {
+    /** @type {AqaPackageSection} */
+    let config = {
+        verbose: false,
+        reporter: '',
+        reporterOptions: {
+            outputDir: './.aqa-output/reports'
+        }
+    };
+
+    if (fs.existsSync(packagePath)) {
+        try {
+            let parsedPackage = JSON.parse(fs.readFileSync(packagePath).toString());
+            if (parsedPackage?.aqa) {
+                /** @type {AqaPackageSection} */
+                let packageAqa = parsedPackage.aqa;
+
+                Object.assign(config, packageAqa);
+            }
+        } catch (e) {
+            console.warn('Could not parse package.json');
+        }
+    }
+
+    // Override with environment variables
+    if (process.env.AQA_VERBOSE) {
+        config.verbose = process.env.AQA_VERBOSE === 'true';
+    }
+    if (process.env.AQA_REPORTER) {
+        config.reporter = process.env.AQA_REPORTER;
+    }
+    if (process.env.AQA_REPORTER_OUTPUT_DIR) {
+        config.reporterOptions.outputDir = process.env.AQA_REPORTER_OUTPUT_DIR;
+    }
+
+    return config;
+}
 
 function escapeRegExp(s) {
     return s.replace(reEscape, '\\$&');
@@ -235,6 +279,8 @@ function clearLine() {
 
 module.exports = {
     Color,
+
+    getPackageConfig,
 
     escapeRegExp,
     microMatch,

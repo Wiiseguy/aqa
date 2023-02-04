@@ -2,6 +2,9 @@
 
 ## 2023
 
+### [1.6.1] (04-feb-2023)
+- Added reporting! The only supported reporter is JUnit for now.
+
 ### [1.6.0] (02-feb-2023)
 - Added `before`, `after`, `beforeEach` and `afterEach` hooks
 - Exposed `Asserts` TypeScript interface
