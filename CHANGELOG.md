@@ -2,6 +2,8 @@
 
 ## 2023
 
+### [1.6.3] (04-feb-2023)
+- Changed skip logic in error reporting
 
 ### [1.6.2] (04-feb-2023)
 - Improved error reporting

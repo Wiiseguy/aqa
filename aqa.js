@@ -503,9 +503,9 @@ setImmediate(async function aqa_tests_runner() {
     let isVerbose = packageConfig.verbose || args.includes('--verbose');
     const startMs = +new Date;
 
+    let numTests = tests.length;
     let fails = 0;
     let beforeFailed = false;
-    let afterFailed = false;
     let beforeFailureMessage = null;
 
     /** @type {TestResult} */
@@ -520,11 +520,21 @@ setImmediate(async function aqa_tests_runner() {
 
     // Run before-tests
     for (let fn of testsBefore) {
+        numTests++;
         try {
             await fn(t);
         } catch (e) {
+            fails++;
             beforeFailed = true;
             beforeFailureMessage = outputFailure('before - skipping all tests in file', e);
+            testResult.testCases.push({
+                duration: 0,
+                startTime: new Date,
+                name: 'before',
+                failureMessage: beforeFailureMessage,
+                success: false,
+                skipped: false
+            });
         }
     }
 
@@ -544,7 +554,7 @@ setImmediate(async function aqa_tests_runner() {
         let testStartMs = +new Date;
 
         if (beforeFailed) {
-            testCaseResult.failureMessage = beforeFailureMessage;
+            testCaseResult.skipped = true;
             if (isVerbose) {
                 console.log(`Skipping: "${test.name}" because of failed before test`)
             }
@@ -609,11 +619,20 @@ setImmediate(async function aqa_tests_runner() {
 
     // Run after-tests
     for (let fn of testsAfter) {
+        numTests++;
         try {
             await fn(t);
         } catch (e) {
-            afterFailed = true;
-            outputFailure('after', e);
+            fails++;
+            let afterFailureMessage = outputFailure('after', e);
+            testResult.testCases.push({
+                duration: 0,
+                startTime: new Date,
+                name: 'after',
+                failureMessage: afterFailureMessage,
+                success: false,
+                skipped: false
+            });
         }
     }
 
@@ -621,10 +640,10 @@ setImmediate(async function aqa_tests_runner() {
 
     testResult.duration = elapsedMs;
     testResult.numFailedTests = fails;
-    testResult.numTests = tests.length;
+    testResult.numTests = numTests;
     outputReport(testResult);
 
-    if (fails === 0 && !beforeFailed && !afterFailed) {
+    if (fails === 0) {
         console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     } else {
         console.error(common.Color.red(` ${fails} test failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
