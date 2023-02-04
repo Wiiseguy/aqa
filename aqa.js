@@ -506,6 +506,7 @@ setImmediate(async function aqa_tests_runner() {
     let fails = 0;
     let beforeFailed = false;
     let afterFailed = false;
+    let beforeFailureMessage = null;
 
     /** @type {TestResult} */
     const testResult = {
@@ -523,7 +524,7 @@ setImmediate(async function aqa_tests_runner() {
             await fn(t);
         } catch (e) {
             beforeFailed = true;
-            outputFailure('before - skipping all tests in file', e);
+            beforeFailureMessage = outputFailure('before - skipping all tests in file', e);
         }
     }
 
@@ -543,7 +544,7 @@ setImmediate(async function aqa_tests_runner() {
         let testStartMs = +new Date;
 
         if (beforeFailed) {
-            testCaseResult.skipped = true;
+            testCaseResult.failureMessage = beforeFailureMessage;
             if (isVerbose) {
                 console.log(`Skipping: "${test.name}" because of failed before test`)
             }
