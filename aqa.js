@@ -458,6 +458,8 @@ function outputFailure(testName, caughtException) {
         console.error(common.Color.gray(stack));
     }
     console.error('');
+
+    return errorMessage + '\n' + testErrorLine + '\n' + stack;
 }
 
 /**
@@ -467,16 +469,20 @@ function outputFailure(testName, caughtException) {
 function outputReport(testResult) {
     let reporter = (packageConfig.reporter || '').toLocaleLowerCase();
     let result = '';
+
+    const makeXmlSafe = (s) => {
+        if (typeof s !== 'string') return s;
+        s = common.Color.strip(s);
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    };
+
     if (reporter === 'junit') {
-        const makeXmlSafe = (s) => {
-            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-        };
         result = `<?xml version="1.0" encoding="UTF-8"?>\n` +
             `<testsuites name="aqa tests" time="${testResult.duration / 1000}" tests="${testResult.numTests}" failures="${testResult.numFailedTests}">\n` +
             `  <testsuite name="${makeXmlSafe(testResult.name)}" timestamp="${testResult.startTime.toISOString()}" tests="${testResult.numTests}" time="${testResult.duration / 1000}" failures="${testResult.numFailedTests}">\n` +
             testResult.testCases.map(testCase => {
                 return `    <testcase name="${makeXmlSafe(testCase.name)}" time="${testCase.duration / 1000}" classname="${makeXmlSafe(testCase.name)}">\n` +
-                    (!testCase.success ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
+                    (!testCase.success && testCase.failureMessage != null ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
                     (testCase.skipped ?  `      <skipped></skipped>\n` : '') +
                        `    </testcase>\n`;
             }).join('') +
@@ -577,8 +583,7 @@ setImmediate(async function aqa_tests_runner() {
         let elapsedTestMs = +new Date - testStartMs;
 
         testCaseResult.success = ok;
-        testCaseResult.duration = elapsedTestMs;
-        testCaseResult.failureMessage = caughtException ? caughtException.stack : null;
+        testCaseResult.duration = elapsedTestMs;        
 
         // Restore potentially overwritten critical globals
         _backupRestore();
@@ -593,7 +598,7 @@ setImmediate(async function aqa_tests_runner() {
                 console.log(common.Color.green('OK'));
             }
         } else {
-            outputFailure(test.name, caughtException);
+            testCaseResult.failureMessage = outputFailure(test.name, caughtException);
         }
 
         if (isVerbose) {
