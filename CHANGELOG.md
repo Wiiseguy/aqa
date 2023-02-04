@@ -2,6 +2,9 @@
 
 ## 2023
 
+### [1.6.4] (04-feb-2023)
+- Before/after tests are now always in report + file name is now in report
+
 ### [1.6.3] (04-feb-2023)
 - Changed skip logic in error reporting
 

@@ -481,7 +481,7 @@ function outputReport(testResult) {
             `<testsuites name="aqa tests" time="${testResult.duration / 1000}" tests="${testResult.numTests}" failures="${testResult.numFailedTests}">\n` +
             `  <testsuite name="${makeXmlSafe(testResult.name)}" timestamp="${testResult.startTime.toISOString()}" tests="${testResult.numTests}" time="${testResult.duration / 1000}" failures="${testResult.numFailedTests}">\n` +
             testResult.testCases.map(testCase => {
-                return `    <testcase name="${makeXmlSafe(testCase.name)}" time="${testCase.duration / 1000}" classname="${makeXmlSafe(testCase.name)}">\n` +
+                return `    <testcase name="${makeXmlSafe(testCase.name)}" time="${testCase.duration / 1000}" classname="${makeXmlSafe(testResult.name)}">\n` +
                     (!testCase.success && testCase.failureMessage != null ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
                     (testCase.skipped ?  `      <skipped></skipped>\n` : '') +
                        `    </testcase>\n`;
@@ -506,36 +506,46 @@ setImmediate(async function aqa_tests_runner() {
     let numTests = tests.length;
     let fails = 0;
     let beforeFailed = false;
-    let beforeFailureMessage = null;
+    let afterFailed = false;
+    let testFilename = path.basename(testScriptFilename);
 
     /** @type {TestResult} */
     const testResult = {
         duration: 0,
         startTime: new Date,
-        name: path.basename(testScriptFilename),
+        name: testFilename,
         numFailedTests: 0,
         numTests: 0,
         testCases: []
     };
 
-    // Run before-tests
-    for (let fn of testsBefore) {
-        numTests++;
+    const runBeforeAfter = async (fn, name) => {
+        let testCaseStartMs = +new Date;
+        let testCase = {
+            duration: 0,
+            startTime: new Date,
+            name: name + ' - ' + testFilename,
+            failureMessage: null,
+            success: false,
+            skipped: false
+        };
+        testResult.testCases.push(testCase);
+
         try {
             await fn(t);
         } catch (e) {
             fails++;
-            beforeFailed = true;
-            beforeFailureMessage = outputFailure('before - skipping all tests in file', e);
-            testResult.testCases.push({
-                duration: 0,
-                startTime: new Date,
-                name: 'before',
-                failureMessage: beforeFailureMessage,
-                success: false,
-                skipped: false
-            });
+            testCase.failureMessage = outputFailure(name, e);
         }
+        testCase.duration = +new Date - testCaseStartMs;
+        testCase.success = !testCase.failureMessage;
+        return testCase.success;
+    };
+
+    // Run before-tests
+    for (let fn of testsBefore) {
+        let ok = await runBeforeAfter(fn, 'before');
+        if(!ok) beforeFailed = true;
     }
 
     // Run tests
@@ -619,21 +629,8 @@ setImmediate(async function aqa_tests_runner() {
 
     // Run after-tests
     for (let fn of testsAfter) {
-        numTests++;
-        try {
-            await fn(t);
-        } catch (e) {
-            fails++;
-            let afterFailureMessage = outputFailure('after', e);
-            testResult.testCases.push({
-                duration: 0,
-                startTime: new Date,
-                name: 'after',
-                failureMessage: afterFailureMessage,
-                success: false,
-                skipped: false
-            });
-        }
+        let ok = await runBeforeAfter(fn, 'after');
+        if(!ok) afterFailed = true;
     }
 
     const elapsedMs = +new Date - startMs;
