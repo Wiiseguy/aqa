@@ -9,16 +9,15 @@ const common = require("./common");
 const [, , ...args] = process.argv;
 const testScriptFilename = require.main ? require.main.filename : process.argv[1];
 const thisFilename = __filename;
+let testFilename = path.basename(testScriptFilename);
+let testFilenameWithoutExt = path.basename(testScriptFilename, path.extname(testScriptFilename));
 
 const STRING_DIFF_MAX_LINES = 3;
 const _backupItems = ['process', 'console'];
 const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
 const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b]));
-const errorMatchers = [
-    /at[^(]+\((.*):(\d+):(\d+)\)/,
-    /at (.*):(\d+):(\d+)/
-];
+const errorMatcher = /(.*):(\d+):(\d+)/;
 
 const packageConfig = common.getPackageConfig();
 
@@ -123,13 +122,12 @@ function getFilePosition(file, line, col) {
 }
 
 function parseError(line) {
-    for (let matcher of errorMatchers) {
-        let match = line.match(matcher);
-        if (match) return {
-            file: match[1],
-            line: parseInt(match[2]),
-            column: parseInt(match[3])
-        };
+    line = line.substr(line.indexOf(testScriptFilename));
+    let match = line.match(errorMatcher);
+    if (match) return {
+        file: match[1],
+        line: parseInt(match[2]),
+        column: parseInt(match[3])
     }
     return null;
 }
@@ -447,10 +445,10 @@ class Asserts {
 
 const t = new Asserts();
 
-function outputFailure(testName, caughtException) {
+function outputFailure(testName, caughtException, fileName) {
     let testErrorLine = getCallerFromStack(caughtException);
     let errorMessage = caughtException.toString();
-    console.error(common.Color.red(`FAILED: `), `"${testName}"`);
+    console.error(common.Color.red(`FAILED: `), `"${testName}"` + (fileName ? ` (${fileName})` : ''));
     console.error(common.Color.gray(testErrorLine));
     console.error(errorMessage);
     let stack = getSimplifiedStack(caughtException);
@@ -483,8 +481,8 @@ function outputReport(testResult) {
             testResult.testCases.map(testCase => {
                 return `    <testcase name="${makeXmlSafe(testCase.name)}" time="${testCase.duration / 1000}" classname="${makeXmlSafe(testResult.name)}">\n` +
                     (!testCase.success && testCase.failureMessage != null ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
-                    (testCase.skipped ?  `      <skipped></skipped>\n` : '') +
-                       `    </testcase>\n`;
+                    (testCase.skipped ? `      <skipped></skipped>\n` : '') +
+                    `    </testcase>\n`;
             }).join('') +
             `  </testsuite>\n` +
             `</testsuites>`;
@@ -507,7 +505,6 @@ setImmediate(async function aqa_tests_runner() {
     let fails = 0;
     let beforeFailed = false;
     let afterFailed = false;
-    let testFilename = path.basename(testScriptFilename);
 
     /** @type {TestResult} */
     const testResult = {
@@ -535,7 +532,7 @@ setImmediate(async function aqa_tests_runner() {
             await fn(t);
         } catch (e) {
             fails++;
-            testCase.failureMessage = outputFailure(name, e);
+            testCase.failureMessage = outputFailure(name, e, testFilenameWithoutExt);
         }
         testCase.duration = +new Date - testCaseStartMs;
         testCase.success = !testCase.failureMessage;
@@ -545,7 +542,7 @@ setImmediate(async function aqa_tests_runner() {
     // Run before-tests
     for (let fn of testsBefore) {
         let ok = await runBeforeAfter(fn, 'before');
-        if(!ok) beforeFailed = true;
+        if (!ok) beforeFailed = true;
     }
 
     // Run tests
@@ -565,9 +562,7 @@ setImmediate(async function aqa_tests_runner() {
 
         if (beforeFailed) {
             testCaseResult.skipped = true;
-            if (isVerbose) {
-                console.log(`Skipping: "${test.name}" because of failed before test`)
-            }
+            console.error(common.Color.red(`SKIPPED: `), test.name, common.Color.gray(`(before-tests failed)`));
             fails++;
             continue;
         }
@@ -604,7 +599,7 @@ setImmediate(async function aqa_tests_runner() {
         let elapsedTestMs = +new Date - testStartMs;
 
         testCaseResult.success = ok;
-        testCaseResult.duration = elapsedTestMs;        
+        testCaseResult.duration = elapsedTestMs;
 
         // Restore potentially overwritten critical globals
         _backupRestore();
@@ -630,7 +625,7 @@ setImmediate(async function aqa_tests_runner() {
     // Run after-tests
     for (let fn of testsAfter) {
         let ok = await runBeforeAfter(fn, 'after');
-        if(!ok) afterFailed = true;
+        if (!ok) afterFailed = true;
     }
 
     const elapsedMs = +new Date - startMs;

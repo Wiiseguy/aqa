@@ -2,6 +2,10 @@
 
 ## 2023
 
+### [1.6.5] (TBD)
+- Added logging for skipped tests
+- Improved file detection in exceptions
+
 ### [1.6.4] (04-feb-2023)
 - Before/after tests are now always in report + file name is now in report
 
