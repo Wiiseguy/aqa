@@ -476,10 +476,10 @@ function outputReport(testResult) {
 
     if (reporter === 'junit') {
         result = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-            `<testsuites name="aqa tests" time="${testResult.duration / 1000}" tests="${testResult.numTests}" failures="${testResult.numFailedTests}">\n` +
-            `  <testsuite name="${makeXmlSafe(testResult.name)}" timestamp="${testResult.startTime.toISOString()}" tests="${testResult.numTests}" time="${testResult.duration / 1000}" failures="${testResult.numFailedTests}">\n` +
+            `<testsuites name="aqa tests" tests="${testResult.numTests}" failures="${testResult.numFailedTests}" time="${testResult.duration / 1000}">\n` +
+            `  <testsuite name="${makeXmlSafe(testResult.name)}" tests="${testResult.numTests}" failures="${testResult.numFailedTests}" timestamp="${testResult.startTime.toISOString()}" time="${testResult.duration / 1000}">\n` +
             testResult.testCases.map(testCase => {
-                return `    <testcase name="${makeXmlSafe(testCase.name)}" time="${testCase.duration / 1000}" classname="${makeXmlSafe(testResult.name)}">\n` +
+                return `    <testcase name="${makeXmlSafe(testCase.name)}" classname="${makeXmlSafe(testResult.name)}" time="${testCase.duration / 1000}">\n` +
                     (!testCase.success && testCase.failureMessage != null ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
                     (testCase.skipped ? `      <skipped></skipped>\n` : '') +
                     `    </testcase>\n`;

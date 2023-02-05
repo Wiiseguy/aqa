@@ -29,7 +29,7 @@ async function main() {
     isVerbose = packageConfig.verbose;
 
     // Override config with command line flags
-    isVerbose = args.includes('--verbose');
+    isVerbose = isVerbose || args.includes('--verbose');
 
 
     if (isWatch) {

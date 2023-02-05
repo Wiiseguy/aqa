@@ -7,7 +7,8 @@
     "test": "node cli",
     "test:verbose": "node cli --verbose",
     "watch": "node cli --watch",
-    "watch:verbose": "node cli --watch --verbose"
+    "watch:verbose": "node cli --watch --verbose",
+    "test:coverage": "c8 npm test"
   },
   "bin": {
     "aqa": "cli.js"
@@ -47,5 +48,8 @@
     "url": "https://github.com/Wiiseguy/aqa/issues"
   },
   "homepage": "https://github.com/Wiiseguy/aqa#readme",
-  "aqa": {}
+  "aqa": {},
+  "devDependencies": {
+    "c8": "^7.12.0"
+  }
 }
