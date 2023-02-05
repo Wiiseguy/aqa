@@ -108,7 +108,7 @@ All files     |    99.2 |    96.63 |   98.57 |    99.2 |
 
 To add special reporters such as LCOV and HTML, check the README pages of the code coverage package.
 
-> Note: [c8](https://github.com/bcoe/c8) is recommended, as it is many times faster than [nyc](https://github.com/istanbuljs/nyc), because uses Node's built-in [V8 coverage tools](https://nodejs.org/dist/latest-v18.x/docs/api/cli.html#node_v8_coveragedir).
+> Note: [c8](https://github.com/bcoe/c8) is recommended, because it uses Node's built-in [V8 coverage tools](https://nodejs.org/dist/latest-v18.x/docs/api/cli.html#node_v8_coveragedir) and it is many times faster than [nyc](https://github.com/istanbuljs/nyc).
 
 <br>
 
