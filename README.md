@@ -3,13 +3,25 @@
 
 **aqa** is a light-weight and **a** **q**uick **a**lternative to [ava](https://github.com/avajs/ava), with a similar API.
 
+
 <br>
 
 ## Installation
 ```
 npm i aqa -D
 ```
+## Features
+- **Dependency-free**: No dependencies, leverages many of Node.js modern built-in modules.
+- **Fast**: Runs tests in parallel by default.
+- **Watch mode**: Automatically re-run tests when files change.
+- **Simple**: No configuration needed, just run your tests!
+- **Powerful**: Supports many asserts, async/await, Sourcemaps
+- **Coverage**: Code coverage support via your favorite coverage tool.
+- **TypeScript**: First-class TypeScript support, with type definitions for all assertions.
+- **CI integration**: Easily run tests in CI pipelines. 
+- **Reporting**: Generate JUnit and TAP reports.
 
+<br>
 
 ## Usage
 
@@ -26,6 +38,12 @@ test('Test our library', t => {
   t.true(myLib.isPrime(3));
   t.false(myLib.isOdd(2));
 })
+
+test('Test something async', async t => {
+  let result = await myLib.asyncAdd(1, 1); 
+  t.is(result, 2);
+})
+
 ```
 
 `
