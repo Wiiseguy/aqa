@@ -2,6 +2,9 @@
 
 ## 2023
 
+### [1.6.6] (TBD)
+- Added `tap` reporter support
+
 ### [1.6.5] (05-feb-2023)
 - Added logging for skipped tests
 - Improved file detection in exceptions

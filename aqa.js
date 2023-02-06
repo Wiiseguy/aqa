@@ -492,6 +492,21 @@ function outputReport(testResult) {
         fs.mkdirSync(outputDir, { recursive: true });
         fs.writeFileSync(outputPath, result);
     }
+    else if (reporter === 'tap') {
+        let testCases = testResult.testCases.map((testCase, i) => {
+            return `${testCase.success ? 'ok' : 'not ok'} ${i + 1} - ${testCase.name}` +
+                (testCase.skipped ? `  # SKIP ${testCase.failureMessage}` : '');
+        }).join('\n');
+        result = `TAP version 13\n` +
+            `1..${testResult.numTests}\n` +
+            testCases + '\n' +
+            `# tests ${testResult.numTests}\n` +
+            `# pass ${testResult.numTests - testResult.numFailedTests}\n` +
+            `# fail ${testResult.numFailedTests}\n` +
+            `# duration_ms ${testResult.duration}\n`;
+
+        console.log(result);
+    }
 
     return result;
 }

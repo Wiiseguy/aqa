@@ -103,6 +103,20 @@ test('Test before-fail', async t => {
     t.true(stdout.includes('SKIPPED:  x2'))    
 })
 
+test('Test TAP report - default', async t => {
+    let result = await t.throwsAsync(async _ => await exec(`node cli tests/_self/success-fail`, { env: { AQA_REPORTER: 'tap' } }))
+    let stdout = Color.strip(result.stdout);
+    let expected = 'TAP version 13\n' +
+        '1..2\n' +
+        'ok 1 - Should succeed\n' +
+        'not ok 2 - Should fail\n' +
+        '# tests 2\n' +
+        '# pass 1\n' +
+        '# fail 1\n';
+
+    t.true(stdout.includes(expected), 'TAP report does not match expected: ' + stdout);
+});
+
 test('Test JUnit report - default', async t => {
     const reportPath = '.aqa-output/reports/test-result-before-fail.js.xml';
     rmSync(reportPath, { force: true });

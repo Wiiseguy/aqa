@@ -268,7 +268,7 @@ We've only covered TypeScript here, but if you're using another language that ha
 <br>
 
 ## Reporting
-(Available in 1.6.1+) **aqa** supports reporting test results to a file. The current supported reporter is `junit`. To enable it, add the following to your `package.json`:
+(Available in 1.6.1+) **aqa** supports reporting test results to a file. The current supported reporters are `junit` and `tap`. To enable it, add the following to your `package.json`:
 ```jsonc
 {  
   "aqa": {
@@ -276,10 +276,15 @@ We've only covered TypeScript here, but if you're using another language that ha
   }
 }
 ```
-
-This will generate a JUnit XML file for each test file in the `.aqa-output/reports` folder. You can then use this file in your CI/CD pipeline to generate reports.
+### JUnit
+The `junit` reporter will generate a JUnit XML file for each test file in the `.aqa-output/reports` folder. You can then use this file in your CI/CD pipeline to generate reports.
 
 See [Config](#config) for more information.
+
+### TAP
+The `tap` reporter will output the test results in the [TAP version 13](https://testanything.org/) format to the console / stdout. Currently, this report is simplified and does not include stack traces.
+
+
 
 <br>
 
@@ -311,7 +316,7 @@ Example: `aqa --verbose`
 Supported config:
 - `verbose` - If true, enables verbose output. (default = false)
   - Can also be set via the `AQA_VERBOSE` environment variable.
-- `reporter` - The reporter to use, can only be `junit` for now. Default = "" (no reporter)
+- `reporter` - The reporter to use, can be `junit` or `tap`. Default = "" (no reporter)
   - Can also be set via the `AQA_REPORTER` environment variable.
 - `reporterOptions` - Options for the reporter. 
   - `outputDir` - The output directory for the reporter. Default = ".aqa-output/reports"
