@@ -13,6 +13,7 @@ let testFilenameWithoutExt = path.basename(testScriptFilename, path.extname(test
 let testFilenameWithoutCwd = testScriptFilename.replace(process.cwd(), '');
 let testFilenameWithoutCwdAndExt = testFilenameWithoutCwd.replace(path.extname(testFilenameWithoutCwd), '');
 let testFilenameNormalized = testFilenameWithoutCwdAndExt.replace(/\\|\//g, '--');
+let testFilename = testFilenameWithoutCwd.replace(/\\/g, '/');
 
 const STRING_DIFF_MAX_LINES = 3;
 const _backupItems = ['process', 'console'];
@@ -527,7 +528,7 @@ setImmediate(async function aqa_tests_runner() {
     const testResult = {
         duration: 0,
         startTime: new Date,
-        name: testFilenameWithoutCwd,
+        name: testFilename,
         numFailedTests: 0,
         numTests: 0,
         testCases: []
@@ -538,7 +539,7 @@ setImmediate(async function aqa_tests_runner() {
         let testCase = {
             duration: 0,
             startTime: new Date,
-            name: name + ' - ' + testFilenameWithoutCwd,
+            name: name + ' - ' + testFilename,
             failureMessage: null,
             success: false,
             skipped: false
