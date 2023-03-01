@@ -50,6 +50,7 @@
   "homepage": "https://github.com/Wiiseguy/aqa#readme",
   "aqa": {},
   "devDependencies": {
+    "@types/node": "^18.14.2",
     "c8": "^7.12.0"
   }
 }

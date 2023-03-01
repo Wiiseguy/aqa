@@ -2,8 +2,9 @@
 
 ## 2023
 
-### [1.6.6] (TBD)
+### [1.6.6] (01-mar-2023)
 - Added `tap` reporter support
+- Fixed JUnit file naming convention, allowing for multiple test files with the same name in different directories
 
 ### [1.6.5] (05-feb-2023)
 - Added logging for skipped tests

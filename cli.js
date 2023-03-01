@@ -2,6 +2,7 @@
 
 const util = require("util");
 const path = require("path");
+const fs = require("fs");
 const child_process = require("child_process");
 const common = require("./common");
 const { watchFiles } = require("./cli.watch");
@@ -31,6 +32,13 @@ async function main() {
     // Override config with command line flags
     isVerbose = isVerbose || args.includes('--verbose');
 
+    // Clean up output dir if reporter is set
+    if (packageConfig.reporter) {
+        let outputDir = packageConfig.reporterOptions.outputDir;
+        if (fs.existsSync(outputDir)) {
+            fs.rmSync(outputDir, { recursive: true });
+        }
+    }
 
     if (isWatch) {
         // Watch files and run tests when changed

@@ -9,8 +9,10 @@ const common = require("./common");
 const [, , ...args] = process.argv;
 const testScriptFilename = require.main ? require.main.filename : process.argv[1];
 const thisFilename = __filename;
-let testFilename = path.basename(testScriptFilename);
 let testFilenameWithoutExt = path.basename(testScriptFilename, path.extname(testScriptFilename));
+let testFilenameWithoutCwd = testScriptFilename.replace(process.cwd(), '');
+let testFilenameWithoutCwdAndExt = testFilenameWithoutCwd.replace(path.extname(testFilenameWithoutCwd), '');
+let testFilenameNormalized = testFilenameWithoutCwdAndExt.replace(/\\|\//g, '--');
 
 const STRING_DIFF_MAX_LINES = 3;
 const _backupItems = ['process', 'console'];
@@ -487,7 +489,7 @@ function outputReport(testResult) {
             `  </testsuite>\n` +
             `</testsuites>`;
         let outputDir = packageConfig.reporterOptions?.outputDir || '';
-        let outputFileName = `test-result-${testResult.name}.xml`;
+        let outputFileName = `test-result${testFilenameNormalized}.xml`;
         let outputPath = path.join(outputDir, outputFileName);
         fs.mkdirSync(outputDir, { recursive: true });
         fs.writeFileSync(outputPath, result);
@@ -525,7 +527,7 @@ setImmediate(async function aqa_tests_runner() {
     const testResult = {
         duration: 0,
         startTime: new Date,
-        name: testFilename,
+        name: testFilenameWithoutCwd,
         numFailedTests: 0,
         numTests: 0,
         testCases: []
@@ -536,7 +538,7 @@ setImmediate(async function aqa_tests_runner() {
         let testCase = {
             duration: 0,
             startTime: new Date,
-            name: name + ' - ' + testFilename,
+            name: name + ' - ' + testFilenameWithoutCwd,
             failureMessage: null,
             success: false,
             skipped: false

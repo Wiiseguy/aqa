@@ -118,7 +118,7 @@ test('Test TAP report - default', async t => {
 });
 
 test('Test JUnit report - default', async t => {
-    const reportPath = '.aqa-output/reports/test-result-before-fail.js.xml';
+    const reportPath = '.aqa-output/reports/test-result--tests--_self--before-fail.xml';
     rmSync(reportPath, { force: true });
 
     let reportExists = existsSync(reportPath);
@@ -136,17 +136,17 @@ test('Test JUnit report - default', async t => {
     // Read report file to string
     let report = readFileSync(reportPath, 'utf8').toString();
     t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="3"'))
-    t.true(report.includes('<testsuite name="before-fail.js" tests="2" failures="3"'))
-    t.true(report.includes('<testcase name="before - before-fail.js" classname="before-fail.js"'))
+    t.true(report.includes('<testsuite name="\\tests\\_self\\before-fail.js" tests="2" failures="3"'), report)
+    t.true(report.includes('<testcase name="before - \\tests\\_self\\before-fail.js" classname="\\tests\\_self\\before-fail.js"'))
     t.true(report.includes('<failure message="Error: Expected true, got false'))
-    t.true(report.includes('<testcase name="x1" classname="before-fail.js"'))
-    t.true(report.includes('<testcase name="x2" classname="before-fail.js"'))
+    t.true(report.includes('<testcase name="x1" classname="\\tests\\_self\\before-fail.js"'))
+    t.true(report.includes('<testcase name="x2" classname="\\tests\\_self\\before-fail.js"'))
     t.true(report.includes('<skipped></skipped>'))
     
 })
 
 test('Test JUnit report - custom report dir', async t => {
-    const reportPath = '.aqa-custom-output/test-result-before-fail.js.xml';
+    const reportPath = '.aqa-custom-output/test-result--tests--_self--before-fail.xml';
     rmSync(reportPath, { force: true });
 
     let reportExists = existsSync(reportPath);
@@ -164,11 +164,11 @@ test('Test JUnit report - custom report dir', async t => {
     // Read report file to string
     let report = readFileSync(reportPath, 'utf8').toString();
     t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="3"'))
-    t.true(report.includes('<testsuite name="before-fail.js" tests="2" failures="3"'))
-    t.true(report.includes('<testcase name="before - before-fail.js" classname="before-fail.js"'))
+    t.true(report.includes('<testsuite name="\\tests\\_self\\before-fail.js" tests="2" failures="3"'), report)
+    t.true(report.includes('<testcase name="before - \\tests\\_self\\before-fail.js" classname="\\tests\\_self\\before-fail.js"'))
     t.true(report.includes('<failure message="Error: Expected true, got false'))
-    t.true(report.includes('<testcase name="x1" classname="before-fail.js"'))
-    t.true(report.includes('<testcase name="x2" classname="before-fail.js"'))
+    t.true(report.includes('<testcase name="x1" classname="\\tests\\_self\\before-fail.js"'))
+    t.true(report.includes('<testcase name="x2" classname="\\tests\\_self\\before-fail.js"'))
     t.true(report.includes('<skipped></skipped>'))
     
 })
