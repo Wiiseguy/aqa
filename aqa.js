@@ -6,16 +6,14 @@ const fs = require('fs');
 const path = require('path');
 
 const common = require("./common");
-const [, , ...args] = process.argv;
 const testScriptFilename = require.main ? require.main.filename : process.argv[1];
 const thisFilename = __filename;
 let testFilenameWithoutExt = path.basename(testScriptFilename, path.extname(testScriptFilename));
 let testFilenameWithoutCwd = testScriptFilename.replace(process.cwd(), '');
 let testFilenameWithoutCwdAndExt = testFilenameWithoutCwd.replace(path.extname(testFilenameWithoutCwd), '');
-let testFilenameNormalized = testFilenameWithoutCwdAndExt.replace(/\\|\//g, '--');
+let testFilenameNormalized = testFilenameWithoutCwdAndExt.replace(/[\\/]/g, '--');
 let testFilename = testFilenameWithoutCwd.replace(/\\/g, '/');
 
-const STRING_DIFF_MAX_LINES = 3;
 const _backupItems = ['process', 'console'];
 const _backup = {};
 _backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
@@ -32,7 +30,7 @@ const testsAfterEach = [];
 
 const throwsDefaultOpts = {};
 
-const nop = function () { };
+const nop = function () { /* Used for console suppression */ };
 const suppressedConsole = Object.freeze({
     Console: console.Console,
     log: nop,
@@ -59,6 +57,8 @@ const suppressedConsole = Object.freeze({
     profileEnd: nop
 });
 
+let skipFile = false;
+let skipFileReason = '';
 let cachedSourceMap = new Map();
 
 /**
@@ -91,6 +91,10 @@ aqa.beforeEach = function (fn) {
 };
 aqa.afterEach = function (fn) {
     testsAfterEach.push(fn);
+};
+aqa.skipFile = function (reason) {
+    skipFile = true;
+    skipFileReason = reason || 'Skipped file';
 };
 
 function getSourceMap(file) {
@@ -178,25 +182,6 @@ function smartify(o) {
     });
 }
 
-function getStringDiff(a, b) {
-    let linesA = a.split('\n');
-    let linesB = b.split('\n');
-
-    for (let i = 0; i < linesA.length; i++) {
-        let la = linesA[i];
-        let lb = linesB[i];
-        if (la !== lb) {
-            let lai = i + 1 >= linesB.length ? undefined : i + STRING_DIFF_MAX_LINES;
-            let lbi = i + 1 >= linesA.length ? undefined : i + STRING_DIFF_MAX_LINES;
-            return [
-                linesA.slice(i, lai).join('\n'),
-                linesB.slice(i, lbi).join('\n')
-            ];
-        }
-    }
-    return [a, b]
-}
-
 function getObjectProperties(o) {
     return Object.entries(Object.getOwnPropertyDescriptors(o))
         .map(([key, value]) => ({ name: key, ...value }));
@@ -277,7 +262,7 @@ class Asserts {
         const path = [];
         const addDiff = (path, a, b) => {
             if (bothString(a, b)) {
-                let stringDiff = getStringDiff(a, b);
+                let stringDiff = common.getStringDiff(a, b);
                 a = stringDiff[0];
                 b = stringDiff[1];
             }
@@ -443,12 +428,18 @@ class Asserts {
     disableLogging() {
         global.console = suppressedConsole;
     }
-    log(_s) { }
+    log(_s) { /* Overwritten later */ }
 }
 
 const t = new Asserts();
 
 function outputFailure(testName, caughtException, fileName) {
+    if (!(caughtException instanceof Error)) {
+        if (typeof caughtException !== 'object') {
+            caughtException = { message: caughtException }
+        }
+        caughtException = Object.assign(new Error(), caughtException);
+    }
     let testErrorLine = getCallerFromStack(caughtException);
     let errorMessage = caughtException.toString();
     console.error(common.Color.red(`FAILED: `), `"${testName}"` + (fileName ? ` (${fileName})` : ''));
@@ -484,7 +475,7 @@ function outputReport(testResult) {
             testResult.testCases.map(testCase => {
                 return `    <testcase name="${makeXmlSafe(testCase.name)}" classname="${makeXmlSafe(testResult.name)}" time="${testCase.duration / 1000}">\n` +
                     (!testCase.success && testCase.failureMessage != null ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
-                    (testCase.skipped ? `      <skipped></skipped>\n` : '') +
+                    (testCase.skipped ? `      <skipped>${testCase.skipMessage || ''}</skipped>\n` : '') +
                     `    </testcase>\n`;
             }).join('') +
             `  </testsuite>\n` +
@@ -516,13 +507,12 @@ function outputReport(testResult) {
 
 
 setImmediate(async function aqa_tests_runner() {
-    let isVerbose = packageConfig.verbose || args.includes('--verbose');
+    let isVerbose = packageConfig.verbose;
     const startMs = +new Date;
 
     let numTests = tests.length;
     let fails = 0;
     let beforeFailed = false;
-    let afterFailed = false;
 
     /** @type {TestResult} */
     const testResult = {
@@ -536,6 +526,7 @@ setImmediate(async function aqa_tests_runner() {
 
     const runBeforeAfter = async (fn, name) => {
         let testCaseStartMs = +new Date;
+        /** @type {TestCaseResult} */
         let testCase = {
             duration: 0,
             startTime: new Date,
@@ -545,6 +536,11 @@ setImmediate(async function aqa_tests_runner() {
             skipped: false
         };
         testResult.testCases.push(testCase);
+        if (skipFile) {
+            testCase.skipped = true;
+            testCase.skipMessage = skipFileReason;
+            return;
+        }
 
         try {
             await fn(t);
@@ -578,10 +574,10 @@ setImmediate(async function aqa_tests_runner() {
 
         let testStartMs = +new Date;
 
-        if (beforeFailed) {
+        if (beforeFailed || skipFile) {
             testCaseResult.skipped = true;
-            console.error(common.Color.red(`SKIPPED: `), test.name, common.Color.gray(`(before-tests failed)`));
-            fails++;
+            testCaseResult.skipMessage = skipFile ? skipFileReason : 'before-tests failed';
+            console.error(common.Color.yellow(`SKIPPED: `), test.name, common.Color.gray(`(${testCaseResult.skipMessage})`));
             continue;
         }
         let ok = true;
@@ -642,8 +638,7 @@ setImmediate(async function aqa_tests_runner() {
 
     // Run after-tests
     for (let fn of testsAfter) {
-        let ok = await runBeforeAfter(fn, 'after');
-        if (!ok) afterFailed = true;
+        await runBeforeAfter(fn, 'after');
     }
 
     const elapsedMs = +new Date - startMs;

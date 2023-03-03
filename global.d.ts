@@ -2,6 +2,7 @@ declare interface AqaPackageSection {
     verbose?: boolean;
     reporter?: string;
     reporterOptions?: AqaPackageReporterOptions;
+    concurrency?: boolean;
 }
 
 declare interface AqaPackageReporterOptions {
@@ -24,4 +25,5 @@ declare interface TestCaseResult {
     skipped: boolean;
     success: boolean;
     failureMessage: string;
+    skipMessage?: string;
 }

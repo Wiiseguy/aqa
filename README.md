@@ -240,6 +240,14 @@ test.afterEach(t => {
 })
 ```
 
+### Skipping tests
+(Available in 1.6.7+) You can skip all tests in a file by calling `test.skipFile()`:
+```js
+const test = require('aqa')
+
+test.skipFile('Reason for skipping this file here');
+```
+
 <br>
 
 ## TypeScript
@@ -313,6 +321,9 @@ Runs **aqa** in watch mode. See [watch mode](#watch-mode) for more information.
 #### `--verbose`
 Adds verbose logging.
 Example: `aqa --verbose`
+#### `--no-concurrency`
+Disables concurrency. This will run all tests sequentially.
+Example: `aqa --no-concurrency`
 
 <br>
 
@@ -323,7 +334,8 @@ Example: `aqa --verbose`
 {  
   "aqa": {
     "verbose": true,
-    "reporter": "",   
+    "concurrency": true,
+    "reporter": "", 
     "reporterOptions": {
       "outputDir": "test-results/" 
     }
@@ -334,6 +346,8 @@ Example: `aqa --verbose`
 Supported config:
 - `verbose` - If true, enables verbose output. (default = false)
   - Can also be set via the `AQA_VERBOSE` environment variable.
+- `concurrency` - If false, disables concurrency. (default = true)
+  - Can also be set via the `AQA_CONCURRENCY` environment variable.
 - `reporter` - The reporter to use, can be `junit` or `tap`. Default = "" (no reporter)
   - Can also be set via the `AQA_REPORTER` environment variable.
 - `reporterOptions` - Options for the reporter. 

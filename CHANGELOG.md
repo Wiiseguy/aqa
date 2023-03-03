@@ -2,6 +2,10 @@
 
 ## 2023
 
+### [1.6.7] (03-mar-2023)
+- Added `test.skipFile()` to skip files from being run
+- Config: `concurrency` option to disable parallel test file execution
+
 ### [1.6.6] (01-mar-2023)
 - Added `tap` reporter support
 - Fixed JUnit file naming convention, allowing for multiple test files with the same name in different directories

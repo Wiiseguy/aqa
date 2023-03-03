@@ -71,18 +71,39 @@ test('Verbose - via arg', async t => {
     let e = await t.throwsAsync(async _ => await exec(`node cli tests/_self/throw --verbose`))
     let stdout = Color.strip(e.stdout);
     t.true(stdout.includes('Running tests for: tests/_self/throw'))
-    t.true(stdout.includes('Running test: "Throw test"'))
+    t.true(stdout.includes('Running test: "Throw test"'), stdout)
     t.true(stdout.includes('[ throw ]\n'))
     t.true(stdout.includes('throw.js:4:11'))
 })
 
 test('Verbose - via process.env', async t => {
-    let result = await t.throwsAsync(async _ => await exec(`node cli tests/_self/should-fail`, { env: { AQA_VERBOSE: 'true' }}));
+    let result = await t.throwsAsync(async _ => await exec(`node cli tests/_self/should-fail`, { env: { AQA_VERBOSE: 'true' } }));
     let stdout = Color.strip(result.stdout);
     t.true(stdout.includes('Running tests for: tests/_self/should-fail'))
     t.true(stdout.includes('Running test: "Should fail'))
     t.true(stdout.includes('[ should-fail ]'))
 });
+
+test('Concurrency - disable via arg', async t => {
+    let e = await exec(`node cli tests/_self/should-succeed --no-concurrency`);
+    let stdout = Color.strip(e.stdout);
+    t.true(stdout.includes('Ran 1 test successfully!'))
+})
+
+test('Concurrency - via process.env', async t => {
+    let e = await exec(`node cli tests/_self/should-succeed --no-concurrency`, { env: { AQA_CONCURRENCY: 'false' } });
+    let stdout = Color.strip(e.stdout);
+    t.true(stdout.includes('Ran 1 test successfully!'))
+})
+
+test('Handle invalid exceptions', async t => {
+    let e = await t.throwsAsync(async _ => await exec(`node cli tests/_self/throw-invalid --verbose`))
+    let stdout = Color.strip(e.stdout);
+    t.true(stdout.includes('FAILED:  "Throw invalid test 1"'))
+    t.true(stdout.includes('FAILED:  "Throw invalid test 2"'))
+    t.true(stdout.includes('Error: Bye1'))
+    t.true(stdout.includes('Error: Bye2'))
+})
 
 test('Test before-after', async t => {
     let result = await exec(`node cli tests/_self/before-after`);
@@ -94,13 +115,21 @@ test('Test before-after', async t => {
     t.true(result.stdout.includes('AFTER EACH2'))
 })
 
+test('Test skip-file', async t => {
+    let result = await exec(`node cli tests/_self/skip-file`);
+    let stdout = Color.strip(result.stdout);
+
+    t.true(stdout.includes('SKIPPED:  x1 (Not feeling like testing today...)'))
+    t.true(stdout.includes('SKIPPED:  x2 (Not feeling like testing today...)'))
+})
+
 test('Test before-fail', async t => {
     let result = await t.throwsAsync(async _ => await exec(`node cli tests/_self/before-fail`))
     let stdout = Color.strip(result.stdout);
 
     t.true(stdout.includes('FAILED:  "before"'))
     t.true(stdout.includes('SKIPPED:  x1'))
-    t.true(stdout.includes('SKIPPED:  x2'))    
+    t.true(stdout.includes('SKIPPED:  x2'))
 })
 
 test('Test TAP report - default', async t => {
@@ -128,21 +157,46 @@ test('Test JUnit report - default', async t => {
     let stdout = Color.strip(result.stdout);
     t.true(stdout.includes('FAILED:  "before"'))
     t.true(stdout.includes('SKIPPED:  x1'))
-    t.true(stdout.includes('SKIPPED:  x2'))    
+    t.true(stdout.includes('SKIPPED:  x2'))
 
     reportExists = existsSync(reportPath);
     t.true(reportExists, 'Report file should exist')
 
     // Read report file to string
     let report = readFileSync(reportPath, 'utf8').toString();
-    t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="3"'))
-    t.true(report.includes('<testsuite name="/tests/_self/before-fail.js" tests="2" failures="3"'), report)
+    t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="1"'), report)
+    t.true(report.includes('<testsuite name="/tests/_self/before-fail.js" tests="2" failures="1"'), report)
     t.true(report.includes('<testcase name="before - /tests/_self/before-fail.js" classname="/tests/_self/before-fail.js"'))
     t.true(report.includes('<failure message="Error: Expected true, got false'))
     t.true(report.includes('<testcase name="x1" classname="/tests/_self/before-fail.js"'))
     t.true(report.includes('<testcase name="x2" classname="/tests/_self/before-fail.js"'))
-    t.true(report.includes('<skipped></skipped>'))
-    
+    t.true(report.includes('<skipped>before-tests failed</skipped>'))
+
+})
+
+test('Test JUnit report - skip-file', async t => {
+    const reportPath = '.aqa-output/reports/test-result--tests--_self--skip-file.xml';
+    rmSync(reportPath, { force: true });
+
+    let reportExists = existsSync(reportPath);
+    t.false(reportExists, 'Report file should not exist before test')
+
+    let result = await exec(`node cli tests/_self/skip-file`, { env: { AQA_REPORTER: 'junit' } });
+    let stdout = Color.strip(result.stdout);
+    t.true(stdout.includes('Ran 2 tests successfully!'))
+
+    reportExists = existsSync(reportPath);
+    t.true(reportExists, 'Report file should exist')
+
+    // Read report file to string
+    let report = readFileSync(reportPath, 'utf8').toString();
+    t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="0"'), report)
+    t.true(report.includes('<testsuite name="/tests/_self/skip-file.js" tests="2" failures="0"'), report)
+    t.true(report.includes('<testcase name="before - /tests/_self/skip-file.js" classname="/tests/_self/skip-file.js"'))
+    t.true(report.includes('<testcase name="x1" classname="/tests/_self/skip-file.js"'))
+    t.true(report.includes('<testcase name="x2" classname="/tests/_self/skip-file.js"'))
+    t.true(report.includes('<skipped>Not feeling like testing today...</skipped>'))
+
 })
 
 test('Test JUnit report - custom report dir', async t => {
@@ -156,19 +210,19 @@ test('Test JUnit report - custom report dir', async t => {
     let stdout = Color.strip(result.stdout);
     t.true(stdout.includes('FAILED:  "before"'))
     t.true(stdout.includes('SKIPPED:  x1'))
-    t.true(stdout.includes('SKIPPED:  x2'))    
+    t.true(stdout.includes('SKIPPED:  x2'))
 
     reportExists = existsSync(reportPath);
     t.true(reportExists, 'Report file should exist')
 
     // Read report file to string
     let report = readFileSync(reportPath, 'utf8').toString();
-    t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="3"'))
-    t.true(report.includes('<testsuite name="/tests/_self/before-fail.js" tests="2" failures="3"'), report)
+    t.true(report.includes('<testsuites name="aqa tests" tests="2" failures="1"'), report)
+    t.true(report.includes('<testsuite name="/tests/_self/before-fail.js" tests="2" failures="1"'), report)
     t.true(report.includes('<testcase name="before - /tests/_self/before-fail.js" classname="/tests/_self/before-fail.js"'))
     t.true(report.includes('<failure message="Error: Expected true, got false'))
     t.true(report.includes('<testcase name="x1" classname="/tests/_self/before-fail.js"'))
     t.true(report.includes('<testcase name="x2" classname="/tests/_self/before-fail.js"'))
-    t.true(report.includes('<skipped></skipped>'))
-    
+    t.true(report.includes('<skipped>before-tests failed</skipped>'))
+
 })

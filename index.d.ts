@@ -6,6 +6,7 @@ declare namespace aqa {
     var beforeEach: (fn: (t: Asserts) => unknown) => void;
     var after: (fn: (t: Asserts) => unknown) => void;
     var afterEach: (fn: (t: Asserts) => unknown) => void;
+    var skipFile: (reason?: string) => void;
 
     interface Asserts {
         is(actual: any, expected: any, message?: string): void;

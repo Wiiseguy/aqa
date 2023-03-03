@@ -195,3 +195,12 @@ test('mapSourceLocation', t => {
         column: 4,
     });
 })
+
+test('getStringDiff', t => {
+    const sut = common.getStringDiff;
+    t.deepEqual(sut('', ''), []);
+    t.deepEqual(sut('a', 'b'), ['a', 'b']);
+    t.deepEqual(sut('a\nb\nc', 'a\nb\nd'), ['c', 'd']);
+    t.deepEqual(sut('a\nb', 'a\nb\nc'), [ '', 'c' ]);
+    t.deepEqual(sut('a\nb\nc', 'a\nb'), [ 'c', '' ]);
+})

@@ -149,7 +149,7 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
                 resolve();
             }
         }
-    });    
+    });
 }
 
 

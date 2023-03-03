@@ -18,19 +18,18 @@ const MAX_TEST_TIME_MS = 1000 * 60;
 const reNumTestExtract = /(\d+) test/;
 
 let isVerbose = false;
+let isConcurrent = true;
 let isRunningTests = false;
 
 async function main() {
     let arg0 = args.filter(a => !a.startsWith('-'))[0]; // First non-flag argument
-    
+
     let isWatch = args.includes('--watch');
 
     // Read config from nearest package.json
     let packageConfig = common.getPackageConfig();
     isVerbose = packageConfig.verbose;
-
-    // Override config with command line flags
-    isVerbose = isVerbose || args.includes('--verbose');
+    isConcurrent = packageConfig.concurrency;
 
     // Clean up output dir if reporter is set
     if (packageConfig.reporter) {
@@ -97,7 +96,7 @@ async function runTests(filesToTest) {
 
     // Execute tests
     isRunningTests = true;
-    await Promise.all(tasks.map(async task => {
+    const runTask = async task => {
         try {
             common.clearLine();
             process.stdout.write(task.basename)
@@ -112,7 +111,14 @@ async function runTests(filesToTest) {
             common.clearLine();
             console.log(common.Color.red('❌ ' + task.basename))
         }
-    }));
+    };
+    if (isConcurrent) {
+        await Promise.all(tasks.map(runTask));
+    } else {
+        for (const task of tasks) {
+            await runTask(task);
+        }
+    }
     common.clearLine();
     isRunningTests = false;
 

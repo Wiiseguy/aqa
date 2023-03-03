@@ -8,6 +8,8 @@ const reSkip = /\\\.|\\node_modules/;
 const reEscape = /[-[\]{}()*+!<=:?.\/\\^$|#\s,]/g;
 const reColorStrip = /\x1b\[\d+m/g;
 
+const STRING_DIFF_MAX_LINES = 3;
+
 const Color = {
     red: s => `\x1b[31m${s}\x1b[0m`,
     yellow: s => `\x1b[33m${s}\x1b[0m`,
@@ -26,6 +28,7 @@ function getPackageConfig() {
     /** @type {AqaPackageSection} */
     let config = {
         verbose: false,
+        concurrency: true,
         reporter: '',
         reporterOptions: {
             outputDir: './.aqa-output/reports'
@@ -51,6 +54,17 @@ function getPackageConfig() {
     }
     if (process.env.AQA_REPORTER_OUTPUT_DIR) {
         config.reporterOptions.outputDir = process.env.AQA_REPORTER_OUTPUT_DIR;
+    }
+    if (process.env.AQA_CONCURRENCY) {
+        config.concurrency = process.env.AQA_CONCURRENCY === 'true';
+    }
+
+    // Override with command line flags
+    if (process.argv.includes('--verbose')) {
+        config.verbose = true;
+    }
+    if (process.argv.includes('--no-concurrency')) {
+        config.concurrency = false;
     }
 
     return config;
@@ -109,6 +123,26 @@ function microMatch(s) {
 
 function normalizeSlashes(str) {
     return str.replace(/\//g, '\\');
+}
+
+function getStringDiff(a, b) {
+    let linesA = a.split('\n');
+    let linesB = b.split('\n');
+    let maxLen = Math.max(linesA.length, linesB.length);
+
+    for (let i = 0; i < maxLen; i++) {
+        let la = linesA[i];
+        let lb = linesB[i];
+        if (la !== lb) {
+            let lai = i + 1 >= linesB.length ? undefined : i + STRING_DIFF_MAX_LINES;
+            let lbi = i + 1 >= linesA.length ? undefined : i + STRING_DIFF_MAX_LINES;
+            return [
+                linesA.slice(i, lai).join('\n'),
+                linesB.slice(i, lbi).join('\n')
+            ];
+        }
+    }
+    return [];
 }
 
 // Taken and modified from https://stackoverflow.com/a/45130990/1423052
@@ -280,6 +314,9 @@ module.exports = {
 
     escapeRegExp,
     microMatch,
+
+    getStringDiff,
+
     getFiles,
     filterFiles,
     humanTime,
