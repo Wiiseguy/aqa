@@ -2,6 +2,10 @@
 
 ## 2023
 
+### [1.6.8] (TBD)
+- Added warning to error messages when a non-Error object is caught. Stack information is not available in this case.
+- CLI: current file name in test feedback gets prepended with its directory name if it's not unique
+
 ### [1.6.7] (03-mar-2023)
 - Added `test.skipFile()` to skip files from being run
 - Config: `concurrency` option to disable parallel test file execution

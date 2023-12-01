@@ -101,8 +101,8 @@ test('Handle invalid exceptions', async t => {
     let stdout = Color.strip(e.stdout);
     t.true(stdout.includes('FAILED:  "Throw invalid test 1"'))
     t.true(stdout.includes('FAILED:  "Throw invalid test 2"'))
-    t.true(stdout.includes('Error: Bye1'))
-    t.true(stdout.includes('Error: Bye2'))
+    t.true(stdout.includes('Error: [WARNING: aqa could not determine stack information, because the thrown object was not an Error.] Bye1'))
+    t.true(stdout.includes('Error: [WARNING: aqa could not determine stack information, because the thrown object was not an Error.] Bye2'))
 })
 
 test('Test before-after', async t => {

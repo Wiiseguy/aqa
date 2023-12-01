@@ -97,19 +97,24 @@ async function runTests(filesToTest) {
     // Execute tests
     isRunningTests = true;
     const runTask = async task => {
+        let displayName = task.basename;
+        // If there's another file with the same name, add the dirname of one level up
+        if (tasks.filter(t => t.basename === task.basename).length > 1) {
+            displayName = path.dirname(task.name).split(path.sep).pop() + '/' + displayName;
+        }
         try {
             common.clearLine();
-            process.stdout.write(task.basename)
+            process.stdout.write(displayName + ' ')
             task.result = await common.timeout(task.exec(), MAX_TEST_TIME_MS, { stdout: '', stderr: `Timeout exceeded while waiting for ${task.name}` });
             common.clearLine();
-            process.stdout.write(common.Color.green('✔ ' + task.basename))
+            process.stdout.write(common.Color.green('✔ ' + displayName))
         } catch (e) {
             task.result = e;
             task.result.code = 1;
             task.result.stdout = task.result.stdout || '';
             task.result.stderr = task.result.stderr || '';
             common.clearLine();
-            console.log(common.Color.red('❌ ' + task.basename))
+            console.log(common.Color.red('❌ ' + displayName + ' '))
         }
     };
     if (isConcurrent) {

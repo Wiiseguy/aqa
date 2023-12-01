@@ -439,6 +439,7 @@ function outputFailure(testName, caughtException, fileName) {
             caughtException = { message: caughtException }
         }
         caughtException = Object.assign(new Error(), caughtException);
+        caughtException.message = '[WARNING: aqa could not determine stack information, because the thrown object was not an Error.] ' + caughtException.message;
     }
     let testErrorLine = getCallerFromStack(caughtException);
     let errorMessage = caughtException.toString();
