@@ -150,7 +150,8 @@ async function getFiles(dir) {
     const dirents = await readdir(dir, { withFileTypes: true });
     const files = await Promise.all(dirents.map((dirent) => {
         const res = path.resolve(dir, dirent.name);
-        if (res.match(reSkip)) return;
+        let normalized = normalizeSlashes(res);
+        if (normalized.match(reSkip)) return;
         return dirent.isDirectory() ? getFiles(res) : res;
     }));
     return Array.prototype.concat(...files).filter(n => n);
