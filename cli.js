@@ -48,10 +48,10 @@ async function main() {
 
         if (arg0) { // Param is file/glob
             let reGlob = common.microMatch(arg0);
+            console.log({allFiles: JSON.stringify(allFiles, null, 2), cwds, reGlob})
             if (typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
                 testsFiles.push(arg0);
             } else {
-                console.log({allFiles, cwds, reGlob})
                 testsFiles = allFiles.filter(f => f.replace(cwds, '').match(reGlob));
             }
         } else {
