@@ -214,6 +214,36 @@ Similar to `console.log`, but helps you easily find for which test method you've
 #### `t.disableLogging()`
 Suppresses any calls to `console.log`, `console.warn`, `console.error`, etc. for the current testcase. Note that logging is enabled again automatically after the testcase has completed.
 
+### Mocking
+(Available in 1.6.8+) **aqa** supports mocking with the `t.mock()` method. This method lets you mock a method on an object or library. Mocked methods are restored automatically after each test.
+
+```js
+const test = require('aqa')
+const Http = require('SomeHttpLibrary')
+
+test('Mocking', async t => {
+  let mockedGet = t.mock(Http, 'get', async _ => {
+    return { statusCode: 200, body: 'Hello World!' }
+  })
+
+  let result = await Http.get('https://example.com')
+  t.is(result.statusCode, 200)
+  t.is(result.body, 'Hello World!')
+
+  t.is(mockedGet.calls.length, 1)
+})
+```	
+In the example above, we mock the `get` method on the `Http` object. The mocked method returns a promise that resolves to a response object. We then assert that the response object has the expected properties. Finally, we assert that the mocked method was called once.
+
+By mocking the `get` method here, any other code that imports `SomeHttpLibrary` and calls `Http.get` will also use the mocked method. This is useful for testing code that uses external libraries.
+
+`t.mock()` returns a `Mock` object with the following properties:
+#### `Mock.restore()`
+Restores the mocked method back to its original implementation. If you don't call this method, the mocked method will be restored automatically after each test.
+#### `Mock.calls`
+An array of all calls to the mocked method. Each call is an array of arguments passed to the mocked method.
+
+
 ### Hooks
 (Available in 1.6.0+) The following hooks are available:
 ```js

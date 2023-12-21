@@ -23,6 +23,7 @@ declare namespace aqa {
         notThrowsAsync(fn: any, message?: string): Promise<void>;
         disableLogging(): void;
         log(s?: any): void;
+        mock(lib: any, fnName: string, mockFn: any): ({ restore: () => void, calls: any[][] });
     }
 
 }

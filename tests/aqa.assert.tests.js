@@ -4,7 +4,7 @@ const { Color } = require('../common');
 test('is', t => {
     t.is(1, 1);
     t.is(1 + 1, 2);
-    t.is(0, -0);    
+    t.is(0, -0);
 })
 
 test('not', t => {
@@ -40,7 +40,7 @@ test('notNear', t => {
 })
 
 test('deepEqual', t => {
-    
+
     t.deepEqual(0, -0);
     t.deepEqual([0], [-0]);
 
@@ -217,7 +217,7 @@ test('Assert fail messages', async t => {
     e = t.throws(_ => t.deepEqual(null, undefined))
     t.is(Color.strip(e.message), 'Difference found at path: (root)\n- null\n+ undefined')
 
-    e = t.throws(_ => t.deepEqual(null, undefined, 'B' ))
+    e = t.throws(_ => t.deepEqual(null, undefined, 'B'))
     t.is(Color.strip(e.message), 'Difference found at path: (root)\n- null\n+ undefined\n B')
 
     e = t.throws(_ => t.deepEqual(undefined, null))
@@ -243,12 +243,12 @@ test('Assert fail messages', async t => {
 
     e = t.throws(_ => t.deepEqual('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nb\nc\nd\ne', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nc\nb\nd\ne'))
     t.is(Color.strip(e.message), 'Difference found at path: (root)\n' +
-    "-   'b\\n' +\n" +
-    "  'c\\n' +\n" +
-    "  'd\\n' +\n" +
-    "+   'c\\n' +\n" +
-    "  'b\\n' +\n" +
-    "  'd\\n' +")
+        "-   'b\\n' +\n" +
+        "  'c\\n' +\n" +
+        "  'd\\n' +\n" +
+        "+   'c\\n' +\n" +
+        "  'b\\n' +\n" +
+        "  'd\\n' +")
 
     e = t.throws(_ => t.deepEqual({ a: 1 }, { a: 2 }))
     t.is(Color.strip(e.message), "Difference found at path: a\n- 1\n+ 2")
@@ -268,16 +268,16 @@ test('Assert fail messages', async t => {
     e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { a: 2 }))
     t.deepEqual(Color.strip(e.message), 'Difference found at path: a\n- 1\n+ 2')
 
-    e = t.throws(_ => t.deepEqual({ a: 1 }, { get a() { return 2; } } ))
+    e = t.throws(_ => t.deepEqual({ a: 1 }, { get a() { return 2; } }))
     t.deepEqual(Color.strip(e.message), 'Difference found at path: a\n- 1\n+ 2')
 
-    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { return 2; } } ))
+    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { return 2; } }))
     t.deepEqual(Color.strip(e.message), 'Difference found at path: a\n- 1\n+ 2')
 
-    e = t.throws(_ => t.deepEqual({ get a() { throw Error('X'); } }, { get a() { return 2; } } ))
+    e = t.throws(_ => t.deepEqual({ get a() { throw Error('X'); } }, { get a() { return 2; } }))
     t.deepEqual(Color.strip(e.message), 'Error was thrown while comparing the path "a": X')
 
-    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { throw Error('X'); } } ))
+    e = t.throws(_ => t.deepEqual({ get a() { return 1; } }, { get a() { throw Error('X'); } }))
     t.deepEqual(Color.strip(e.message), 'Error was thrown while comparing the path "a": X')
 
     e = t.throws(_ => t.deepEqual({
@@ -396,3 +396,87 @@ test('Non-enumerable properties & deepEqual', t => {
         got: 1
     })
 });
+
+test('Mocking', t => {
+    let lib = {
+        a: () => 1
+    }
+
+    let mock = t.mock(lib, 'a', () => 2);
+    t.is(lib.a(), 2);
+    t.is(mock.calls.length, 1);
+
+    mock.restore();
+    t.is(lib.a(), 1);
+    t.is(mock.calls.length, 1, 'Should not have been called again');
+
+});
+
+test('Mocking - calls', t => {
+    let lib = {
+        a: (b, c) => b + c
+    }
+
+    let mock = t.mock(lib, 'a', () => 2);
+    t.is(lib.a(2, 3), 2);
+    t.is(lib.a(3, 4), 2);
+    t.is(mock.calls.length, 2);
+
+    t.deepEqual(mock.calls, [
+        [2, 3],
+        [3, 4]
+    ])
+});
+
+test('Mocking multiple times', t => {
+    let lib = {
+        a: () => 1
+    }
+
+    let mock = t.mock(lib, 'a', () => 2);
+    t.is(lib.a(), 2);
+    t.is(mock.calls.length, 1);
+
+    mock = t.mock(lib, 'a', () => 3);
+    t.is(lib.a(), 3);
+    t.is(mock.calls.length, 1);
+})
+
+let sharedLib = {
+    a: () => 1
+}
+
+test('Mocking without restore 1', t => {
+    let mock = t.mock(sharedLib, 'a', () => 2);
+    t.is(sharedLib.a(), 2);
+    t.is(mock.calls.length, 1);
+
+    t.mock(sharedLib, 'a', () => 3);
+    t.is(sharedLib.a(), 3);
+    t.is(mock.calls.length, 1);
+
+    // Omitting restore() should not cause any problems for 'Mock without restore 2'
+});
+
+test('Mocking without restore 2', t => {
+    t.is(sharedLib.a(), 1, 'Should not have been mocked');
+});
+
+test('Mocking non-mockable', t => {
+    let lib = {
+        a: 1
+    }
+
+    let e = t.throws(_ => t.mock(lib, 'a', () => 2))
+    t.is(e.message, "Cannot mock non-function \"a\"")
+})
+
+test('Mocking non-function param', t => {
+    let lib = {
+        a: () => 1
+    }
+
+    /** @ts-ignore : testing invalid input */
+    let e = t.throws(_ => t.mock(lib, 'a', 2))
+    t.is(e.message, "Cannot mock with non-function")
+})

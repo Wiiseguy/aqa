@@ -2,8 +2,9 @@
 
 ## 2023
 
-### [1.6.8] (TBD)
+### [1.6.8] (21-dec-2023)
 - Added warning to error messages when a non-Error object is caught. Stack information is not available in this case.
+- Added `t.mock()` to mock library methods (see README for more info)
 - CLI: current file name in test feedback gets prepended with its directory name if it's not unique
 
 ### [1.6.7] (03-mar-2023)

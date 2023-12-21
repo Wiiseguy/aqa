@@ -429,6 +429,14 @@ class Asserts {
         global.console = suppressedConsole;
     }
     log(_s) { /* Overwritten later */ }
+    /**
+     * Mock a function in a library.
+     * @param {any} _lib 
+     * @param {string} _fnName 
+     * @param {(...args: any[]) => any} _mockFn
+     * @returns {{ restore: () => void, calls: any[][] }}
+     */
+    mock(_lib, _fnName, _mockFn) { /** @ts-ignore */return null; }
 }
 
 const t = new Asserts();
@@ -588,6 +596,27 @@ setImmediate(async function aqa_tests_runner() {
         let localT = Object.assign(t);
         localT.log = (...args) => logs.push(args);
 
+        let localMocks = [];
+        localT.mock = (lib, fnName, mockFn) => {
+            if (typeof lib[fnName] !== 'function') throw new Error(`Cannot mock non-function "${fnName}"`);
+            if (typeof mockFn !== 'function') throw new Error(`Cannot mock with non-function`)
+            let calls = []
+            let original = lib[fnName];
+            lib[fnName] = (...args) => {
+                calls.push(args);
+                return mockFn(...args);
+            };
+            let localMock = { lib, fnName, original }
+            localMocks.unshift(localMock);
+            return {
+                restore() {
+                    localMocks.splice(localMocks.indexOf(localMock), 1);
+                    lib[fnName] = original;
+                },
+                calls
+            }
+        }
+
         if (isVerbose) {
             console.log(`Running test: "${test.name}"`);
         }
@@ -618,6 +647,11 @@ setImmediate(async function aqa_tests_runner() {
 
         // Restore potentially overwritten critical globals
         _backupRestore();
+
+        // Restore local mocks
+        localMocks.forEach(m => {
+            m.lib[m.fnName] = m.original;
+        });
 
         if (logs.length > 0) {
             console.log(`[Log output for "${test.name}":]`);
