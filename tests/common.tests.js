@@ -56,6 +56,7 @@ test('microMatch', async t => {
     t.deepEqual(sut('abc*'), /^abc\S+$/);
     t.deepEqual(sut('*tests\\file.js'), /^\S+tests\\file\.js$/);
     t.deepEqual(sut('*tests\\*.tests.js'), /^\S+tests\\\S+\.tests\.js$/);
+    t.deepEqual(sut('tests/*/should-succeed.js'), /^tests\\\S+\\should-succeed\.js$/);
     t.deepEqual(sut('tests?.js'), /^tests?\.js$/);
     t.deepEqual(sut('tests.js'), 'tests.js');
     t.deepEqual(sut('*/_([^_])*/*'), /^\S+\\_([^_])*\\\S+$/);
