@@ -152,7 +152,7 @@ async function getFiles(dir) {
         const res = path.resolve(dir, dirent.name);
         let normalized = normalizeSlashes(res);
         if (normalized.match(reSkip)) return;
-        return dirent.isDirectory() ? getFiles(res) : normalized;
+        return dirent.isDirectory() ? getFiles(res) : res;
     }));
     return Array.prototype.concat(...files).filter(n => n);
 }

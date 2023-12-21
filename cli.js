@@ -44,7 +44,7 @@ async function main() {
         watchFiles(arg0, runTests, isVerbose);
     } else {
         let testsFiles = [];
-        let allFiles = await common.getFiles(cwd);
+        let allFiles = (await common.getFiles(cwd)).map(f => f.replace(cwds, ''));
 
         if (arg0) { // Param is file/glob
             let reGlob = common.microMatch(arg0);
@@ -52,7 +52,7 @@ async function main() {
             if (typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
                 testsFiles.push(arg0);
             } else {
-                testsFiles = allFiles.filter(f => f.replace(cwds, '').match(reGlob));
+                testsFiles = common.filterFiles(allFiles, [reGlob]);
             }
         } else {
             // Test all files
