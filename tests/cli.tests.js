@@ -16,7 +16,7 @@ test('Test should-succeed - glob', async t => {
 })
 
 test('Test should-succeed - glob 2', async t => {
-    let result = await exec(`node cli **/should-succ*.js`);
+    let result = await exec(`node cli tests/**/should-succ*.js`);
     t.true(result.stdout.includes('Ran 2 tests successfully!'))
     t.true(result.stdout.includes('level0/should-succeed.js'))
     t.true(result.stdout.includes('_self/should-succeed.js'))
