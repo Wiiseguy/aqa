@@ -397,6 +397,24 @@ test('Non-enumerable properties & deepEqual', t => {
     })
 });
 
+test('Mocking - readme example', async t => {
+    let Http = {
+        get: async _url => {
+            return { statusCode: 200, body: 'Hello World!' }
+        }
+    }
+
+    let mockedGet = t.mock(Http, 'get', async _ => {
+        return { statusCode: 200, body: 'Hello World!' }
+    })
+
+    let result = await Http.get('https://example.com')
+    t.is(result.statusCode, 200)
+    t.is(result.body, 'Hello World!')
+
+    t.is(mockedGet.calls.length, 1)
+})
+
 test('Mocking', t => {
     let lib = {
         a: () => 1
@@ -409,7 +427,6 @@ test('Mocking', t => {
     mock.restore();
     t.is(lib.a(), 1);
     t.is(mock.calls.length, 1, 'Should not have been called again');
-
 });
 
 test('Mocking - calls', t => {
