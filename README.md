@@ -222,11 +222,11 @@ const test = require('aqa')
 const Http = require('SomeHttpLibrary')
 
 test('Mocking', async t => {
-  let mockedGet = t.mock(Http, 'get', async _ => {
+  const mockedGet = t.mock(Http, 'get', async _ => {
     return { statusCode: 200, body: 'Hello World!' }
   })
 
-  let result = await Http.get('https://example.com')
+  const result = await Http.get('https://example.com')
   t.is(result.statusCode, 200)
   t.is(result.body, 'Hello World!')
 
@@ -242,6 +242,27 @@ By mocking the `get` method here, any other code that imports `SomeHttpLibrary` 
 Restores the mocked method back to its original implementation. If you don't call this method, the mocked method will be restored automatically after each test.
 #### `Mock.calls`
 An array of all calls to the mocked method. Each call is an array of arguments passed to the mocked method.
+
+#### Global mocking
+(Available in 1.6.9+) **aqa** also supports global mocking via the `test.mock()` method. This method works similarly to `t.mock()`, but it mocks the method globally for all tests in the current file.
+
+```js
+const test = require('aqa')
+const Http = require('SomeHttpLibrary')
+
+const mockedGet = test.mock(Http, 'get', async _ => {
+  return { statusCode: 200, body: 'Hello World!' }
+})
+
+test('Mocking', async t => {
+  let result = await Http.get('https://example.com')
+  t.is(result.statusCode, 200)
+  t.is(result.body, 'Hello World!')
+
+  t.is(mockedGet.calls.length, 1)
+})
+```	
+
 
 
 ### Hooks
@@ -270,13 +291,47 @@ test.afterEach(t => {
 })
 ```
 
-### Skipping tests
+### Skipping a test file
 (Available in 1.6.7+) You can skip all tests in a file by calling `test.skipFile()`:
 ```js
 const test = require('aqa')
 
 test.skipFile('Reason for skipping this file here');
 ```
+
+### Skipping a test
+(Available in 1.6.9+) You can skip individual tests by calling `test.skip()` instead of the usual `test()`:
+```js
+const test = require('aqa')
+
+test('This test will run', t => {
+  // Your assertions
+})
+
+test.skip('This test will not run', t => {
+  // ...
+})
+```
+
+### Solo running tests
+(Available in 1.6.9+) You can run only a single test by calling `test.solo()` instead of the usual `test()`. This will effectively skip all other tests in the file.
+```js
+const test = require('aqa')
+
+test('This test will not run', t => {
+  // ...
+})
+
+test.solo('Test name', t => {    
+  // Your assertions
+})
+
+test('This test will not run either', t => {
+  // ...
+})
+
+```
+Note: Any defined tests hooks (before, after) will still run as usual.
 
 <br>
 

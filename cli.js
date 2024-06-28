@@ -167,7 +167,11 @@ async function runTests(filesToTest) {
     // Output results
     console.log();
     if (failed.length === 0) {
-        console.log(common.Color.green(`✔ Ran ${numOk} test${numOk === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        if (numOk === 0) {
+            console.log(common.Color.yellow('No tests were ran.'));
+        } else {
+            console.log(common.Color.green(`✔ Ran ${numOk} test${numOk === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        }
     } else {
         failed.forEach(f => {
             if (f.fatal) {

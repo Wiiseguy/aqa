@@ -415,6 +415,24 @@ test('Mocking - readme example', async t => {
     t.is(mockedGet.calls.length, 1)
 })
 
+test('Mocking - readme example (global)', async t => {
+    let Http = {
+        get: async _url => {
+            return { statusCode: 200, body: 'Hello World!' }
+        }
+    }
+
+    let mockedGet = test.mock(Http, 'get', async _ => {
+        return { statusCode: 200, body: 'Hello World!' }
+    })
+
+    let result = await Http.get('https://example.com')
+    t.is(result.statusCode, 200)
+    t.is(result.body, 'Hello World!')
+
+    t.is(mockedGet.calls.length, 1)
+})
+
 test('Mocking', t => {
     let lib = {
         a: () => 1

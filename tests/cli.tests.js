@@ -122,12 +122,28 @@ test('Test before-after', async t => {
     t.true(result.stdout.includes('AFTER EACH2'))
 })
 
+test('Test skip', async t => {
+    let result = await exec(`node cli tests/_self/skip`);    
+    let stdout = Color.strip(result.stdout);
+    t.true(result.stdout.includes('BEFORE'))
+    t.true(result.stdout.includes('AFTER'))
+    t.true(stdout.includes('BEFORE EACH1'))
+    t.true(stdout.includes('AFTER EACH1'))
+    t.true(stdout.includes('Ran 1 test successfully!'))
+})
+
 test('Test skip-file', async t => {
     let result = await exec(`node cli tests/_self/skip-file`);
     let stdout = Color.strip(result.stdout);
-
     t.true(stdout.includes('SKIPPED:  x1 (Not feeling like testing today...)'))
     t.true(stdout.includes('SKIPPED:  x2 (Not feeling like testing today...)'))
+    t.true(stdout.includes('No tests were ran.'))
+    t.false(result.stdout.includes('BEFORE'))
+    t.false(result.stdout.includes('AFTER'))
+    t.false(result.stdout.includes('BEFORE EACH1'))
+    t.false(result.stdout.includes('BEFORE EACH2'))
+    t.false(result.stdout.includes('AFTER EACH1'))
+    t.false(result.stdout.includes('AFTER EACH2'))
 })
 
 test('Test before-fail', async t => {
@@ -190,7 +206,7 @@ test('Test JUnit report - skip-file', async t => {
 
     let result = await exec(`node cli tests/_self/skip-file`, { env: { AQA_REPORTER: 'junit' } });
     let stdout = Color.strip(result.stdout);
-    t.true(stdout.includes('Ran 2 tests successfully!'))
+    t.true(stdout.includes('No tests were ran.'))
 
     reportExists = existsSync(reportPath);
     t.true(reportExists, 'Report file should exist')
@@ -232,4 +248,11 @@ test('Test JUnit report - custom report dir', async t => {
     t.true(report.includes('<testcase name="x2" classname="/tests/_self/before-fail.js"'))
     t.true(report.includes('<skipped>before-tests failed</skipped>'))
 
+})
+
+test('Solo test', async t => {
+    let result = await exec(`node cli tests/_self/solo`);
+    let stdout = Color.strip(result.stdout);
+    t.true(result.stdout.includes('Ran 2 tests successfully!'))
+    t.true(stdout.includes('SKIPPED:  Should not run 2 (presence of solo tests)'))
 })

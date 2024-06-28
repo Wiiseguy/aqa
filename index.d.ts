@@ -1,4 +1,4 @@
-declare function aqa(testName: string, testFn: (t: aqa.Asserts) => unknown): void;
+declare function aqa(testName: string, testFn: (t: aqa.Asserts) => unknown): ({ name: string, fn: (t: aqa.Asserts) => unknown });
 declare namespace aqa {
     var ignore: symbol;
     var ignoreExtra: (value: any) => any;
@@ -7,6 +7,8 @@ declare namespace aqa {
     var after: (fn: (t: Asserts) => unknown) => void;
     var afterEach: (fn: (t: Asserts) => unknown) => void;
     var skipFile: (reason?: string) => void;
+    var mock: (lib: any, fnName: string, mockFn: any) => ({ restore: () => void, calls: any[][] });
+    var solo: (testName: string, testFn: (t: Asserts) => unknown) => ({ name: string, fn: (t: Asserts) => unknown });
 
     interface Asserts {
         is(actual: any, expected: any, message?: string): void;

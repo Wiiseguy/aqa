@@ -1,10 +1,19 @@
 # **aqa** Changelog
 
+## 2024
+
+### [1.6.9] (28-jun-2024)
+- Added `test.mock()` to mock library methods on a global level
+- Added `test.solo()` to run only a single test
+- Added `test.skip()` to skip individual tests
+- Re-added support for 'test.js' and 'tests.js' in root directory
+- If no tests were ran, it will no longer report 'Ran 0 tests ran successfully!', but rather 'No tests were ran.'
+
 ## 2023
 
 ### [1.6.8] (21-dec-2023)
 - Added warning to error messages when a non-Error object is caught. Stack information is not available in this case.
-- Added `t.mock()` to mock library methods (see README for more info)
+- Added `t.mock()` to mock library methods per individual test
 - CLI: current file name in test feedback gets prepended with its directory name if it's not unique
 
 ### [1.6.7] (03-mar-2023)

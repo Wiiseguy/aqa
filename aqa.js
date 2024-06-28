@@ -27,6 +27,8 @@ const testsBefore = [];
 const testsAfter = [];
 const testsBeforeEach = [];
 const testsAfterEach = [];
+const globalMocks = [];
+const soloTests = [];
 
 const throwsDefaultOpts = {};
 
@@ -68,7 +70,9 @@ let cachedSourceMap = new Map();
  */
 function aqa(testName, testFn) {
     if (tests.find(t => t.name === testName)) console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
-    tests.push({ name: testName, fn: testFn });
+    let test = { name: testName, fn: testFn };
+    tests.push(test);
+    return test;
 }
 
 function IgnoreExtra(value) {
@@ -96,6 +100,39 @@ aqa.skipFile = function (reason) {
     skipFile = true;
     skipFileReason = reason || 'Skipped file';
 };
+aqa.skip = function (testName, testFn) {
+    let test = aqa(testName, testFn);
+    test.skip = true;
+    return test;
+};
+aqa.mock = function (lib, fnName, mockFn) {
+    return addMock(lib, fnName, mockFn, globalMocks);
+};
+aqa.solo = function (testName, testFn) {
+    let test = aqa(testName, testFn);
+    soloTests.push(test); 
+    return test;
+};
+
+function addMock(lib, fnName, mockFn, list) {
+    if (typeof lib[fnName] !== 'function') throw new Error(`Cannot mock non-function "${fnName}"`);
+    if (typeof mockFn !== 'function') throw new Error(`Cannot mock with non-function`);
+    let calls = [];
+    let original = lib[fnName];
+    lib[fnName] = (...args) => {
+        calls.push(args);
+        return mockFn(...args);
+    };
+    let mockInfo = { lib, fnName, original };
+    list.unshift({ lib, fnName, original });
+    return {
+        restore() {
+            list.splice(list.indexOf(mockInfo), 1);
+            lib[fnName] = original;
+        },
+        calls
+    }
+}
 
 function getSourceMap(file) {
     if (cachedSourceMap.has(file)) return cachedSourceMap.get(file);
@@ -519,9 +556,13 @@ setImmediate(async function aqa_tests_runner() {
     let isVerbose = packageConfig.verbose;
     const startMs = +new Date;
 
+    const soloTestFns = soloTests.map(t => t.fn);
+    const skippedBySolo = soloTests.length > 0 ? tests.filter(t => !soloTestFns.includes(t.fn)) : [];
+
     let numTests = tests.length;
     let fails = 0;
     let beforeFailed = false;
+    let actuallyRanTests = 0;
 
     /** @type {TestResult} */
     const testResult = {
@@ -586,6 +627,15 @@ setImmediate(async function aqa_tests_runner() {
         if (beforeFailed || skipFile) {
             testCaseResult.skipped = true;
             testCaseResult.skipMessage = skipFile ? skipFileReason : 'before-tests failed';
+        } else if (skippedBySolo.includes(test)) {
+            testCaseResult.skipped = true;
+            testCaseResult.skipMessage = 'presence of solo tests';
+        } else if (test.skip) {
+            testCaseResult.skipped = true;
+            testCaseResult.skipMessage = 'marked as skip';
+        }
+
+        if (testCaseResult.skipped) {
             console.error(common.Color.yellow(`SKIPPED: `), test.name, common.Color.gray(`(${testCaseResult.skipMessage})`));
             continue;
         }
@@ -598,23 +648,7 @@ setImmediate(async function aqa_tests_runner() {
 
         let localMocks = [];
         localT.mock = (lib, fnName, mockFn) => {
-            if (typeof lib[fnName] !== 'function') throw new Error(`Cannot mock non-function "${fnName}"`);
-            if (typeof mockFn !== 'function') throw new Error(`Cannot mock with non-function`)
-            let calls = []
-            let original = lib[fnName];
-            lib[fnName] = (...args) => {
-                calls.push(args);
-                return mockFn(...args);
-            };
-            let localMock = { lib, fnName, original }
-            localMocks.unshift(localMock);
-            return {
-                restore() {
-                    localMocks.splice(localMocks.indexOf(localMock), 1);
-                    lib[fnName] = original;
-                },
-                calls
-            }
+            return addMock(lib, fnName, mockFn, localMocks);
         }
 
         if (isVerbose) {
@@ -644,6 +678,7 @@ setImmediate(async function aqa_tests_runner() {
 
         testCaseResult.success = ok;
         testCaseResult.duration = elapsedTestMs;
+        actuallyRanTests++;
 
         // Restore potentially overwritten critical globals
         _backupRestore();
@@ -684,7 +719,7 @@ setImmediate(async function aqa_tests_runner() {
     outputReport(testResult);
 
     if (fails === 0) {
-        console.log(common.Color.green(` Ran ${tests.length} test${tests.length === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        console.log(common.Color.green(` Ran ${actuallyRanTests} test${actuallyRanTests === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
     } else {
         console.error(common.Color.red(` ${fails} test failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
         process.exit(1);
