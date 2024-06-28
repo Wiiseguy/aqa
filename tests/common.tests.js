@@ -1,55 +1,50 @@
 const test = require('../aqa');
-const common = require("../common");
+const common = require('../common');
 
 function delayPromise(ms, resolveValue) {
-    return new Promise((resolve) => {
-        setTimeout(_ =>
-            resolve(resolveValue),
-            ms);
+    return new Promise(resolve => {
+        setTimeout(_ => resolve(resolveValue), ms);
     });
 }
 
 test('Color.red', async t => {
-    t.is(common.Color.red('abc'), "\x1b[31mabc\x1b[0m");
-})
+    t.is(common.Color.red('abc'), '\x1b[31mabc\x1b[0m');
+});
 
 test('Color.green', async t => {
-    t.is(common.Color.green('abc'), "\x1b[32mabc\x1b[0m");
-})
+    t.is(common.Color.green('abc'), '\x1b[32mabc\x1b[0m');
+});
 
 test('Color.gray', async t => {
-    t.is(common.Color.gray('abc'), "\x1b[90mabc\x1b[0m");
-})
+    t.is(common.Color.gray('abc'), '\x1b[90mabc\x1b[0m');
+});
 
 test('Color.strip', async t => {
-    let str = ''
-        + common.Color.red('red') + '\r\n'
-        + common.Color.green('green') + ' - \n'
-        + common.Color.gray('gray');
-    
-    t.is(common.Color.strip(str), "red\r\ngreen - \ngray");
-})
+    let str = '' + common.Color.red('red') + '\r\n' + common.Color.green('green') + ' - \n' + common.Color.gray('gray');
+
+    t.is(common.Color.strip(str), 'red\r\ngreen - \ngray');
+});
 
 test('escapeRegExp', async t => {
     let sut = common.escapeRegExp;
-    t.is(sut('abc'), "abc");
-    t.is(sut('(abc)'), "\\(abc\\)");
-    t.is(sut('[abc]'), "\\[abc\\]");
-    t.is(sut('a*'), "a\\*");
-    t.is(sut('\\'), "\\\\");
-    t.is(sut('-[\]{}()*+!<=:?.\/\\^$|#\s,'), "\\-\\[\\]\\{\\}\\(\\)\\*\\+\\!\\<\\=\\:\\?\\.\\/\\\\\\^\\$\\|\\#s\\,");
-})
+    t.is(sut('abc'), 'abc');
+    t.is(sut('(abc)'), '\\(abc\\)');
+    t.is(sut('[abc]'), '\\[abc\\]');
+    t.is(sut('a*'), 'a\\*');
+    t.is(sut('\\'), '\\\\');
+    t.is(sut('-[]{}()*+!<=:?./\\^$|#s,'), '\\-\\[\\]\\{\\}\\(\\)\\*\\+\\!\\<\\=\\:\\?\\.\\/\\\\\\^\\$\\|\\#s\\,');
+});
 
 test('microMatch', async t => {
     let sut = common.microMatch;
     t.deepEqual(sut(''), null);
-    t.deepEqual(sut('abc'), "abc");
-    t.deepEqual(sut('abc.xyz'), "abc.xyz");
+    t.deepEqual(sut('abc'), 'abc');
+    t.deepEqual(sut('abc.xyz'), 'abc.xyz');
     t.deepEqual(sut('abc?'), /^abc?$/);
     t.deepEqual(sut('abc+'), /^abc+$/);
     t.deepEqual(sut('abc(xyz)+'), /^abc(xyz)+$/);
     t.deepEqual(sut('abc(xyz)*'), /^abc(xyz)*$/);
-    t.deepEqual(sut('a-z'), "a-z");
+    t.deepEqual(sut('a-z'), 'a-z');
     t.deepEqual(sut('[a-z]'), /^[a-z]$/);
     t.deepEqual(sut('[^a-z]'), /^[^a-z]$/);
     t.deepEqual(sut('[!a-z]'), /^[^a-z]$/);
@@ -60,45 +55,24 @@ test('microMatch', async t => {
     t.deepEqual(sut('tests?.js'), /^tests?\.js$/);
     t.deepEqual(sut('tests.js'), 'tests.js');
     t.deepEqual(sut('*/_([^_])*/*'), /^\S+\\_([^_])*\\\S+$/);
-})
+});
 
 test('filterFiles - custom', async t => {
     let sut = common.filterFiles;
-    let files = [
-        'C:\\DEV\\something-else.js',
-        'C:\\DEV\\test.js',
-        'C:\\DEV\\tests.js',
-        'C:\\DEV\\a.tests.js',
-    ];
+    let files = ['C:\\DEV\\something-else.js', 'C:\\DEV\\test.js', 'C:\\DEV\\tests.js', 'C:\\DEV\\a.tests.js'];
     let testFiles = files.slice(1);
-    t.deepEqual(sut(files, [
-        common.microMatch("tests?.js")
-    ]), []);
-    t.deepEqual(sut(files, [
-        common.microMatch("*tests?.js")
-    ]), testFiles);
-    t.deepEqual(sut(files, [
-        common.microMatch("**tests?.js")
-    ]), testFiles);
-    t.deepEqual(sut(files, [
-        common.microMatch("**/*tests?.js")
-    ]), testFiles);
-})
+    t.deepEqual(sut(files, [common.microMatch('tests?.js')]), []);
+    t.deepEqual(sut(files, [common.microMatch('*tests?.js')]), testFiles);
+    t.deepEqual(sut(files, [common.microMatch('**tests?.js')]), testFiles);
+    t.deepEqual(sut(files, [common.microMatch('**/*tests?.js')]), testFiles);
+});
 
 test('filterFiles - custom - multi', async t => {
     let sut = common.filterFiles;
-    let files = [
-        'C:\\DEV\\something-else.js',
-        'C:\\DEV\\test.js',
-        'C:\\DEV\\tests.js',
-        'C:\\DEV\\a.spec.js',
-    ];
+    let files = ['C:\\DEV\\something-else.js', 'C:\\DEV\\test.js', 'C:\\DEV\\tests.js', 'C:\\DEV\\a.spec.js'];
     let testFiles = files.slice(1);
-    t.deepEqual(sut(files, [
-        common.microMatch("*tests?.js"),
-        common.microMatch("*spec.js")
-    ]), testFiles);
-})
+    t.deepEqual(sut(files, [common.microMatch('*tests?.js'), common.microMatch('*spec.js')]), testFiles);
+});
 
 test('filterFiles - REGEXP_TEST_FILES', async t => {
     let sut = common.filterFiles;
@@ -114,12 +88,12 @@ test('filterFiles - REGEXP_TEST_FILES', async t => {
         'C:\\DEV\\a.spec.js',
         'C:\\DEV\\test\\a.js',
         'C:\\DEV\\tests\\b.js',
-        'C:\\DEV\\__tests__\\c.js',
+        'C:\\DEV\\__tests__\\c.js'
     ];
     let testFiles = files.slice(1);
 
     t.deepEqual(sut(files, common.REGEXP_TEST_FILES), testFiles);
-})
+});
 
 test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
     let sut = common.filterFiles;
@@ -137,26 +111,26 @@ test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
         'C:\\DEV\\a.spec.js',
         'C:\\DEV\\test\\a.js',
         'C:\\DEV\\tests\\b.js',
-        'C:\\DEV\\__tests__\\c.js',
+        'C:\\DEV\\__tests__\\c.js'
     ];
     let testFiles = files.slice(3);
 
     t.deepEqual(sut(files, common.REGEXP_TEST_FILES, common.REGEXP_IGNORE_FILES), testFiles);
-})
+});
 
 test('humanTime', async t => {
     let sut = common.humanTime;
-    t.is(sut(0), "0ms");
-    t.is(sut(1), "1ms");
-    t.is(sut(100), "100ms");
-    t.is(sut(999), "999ms");
-    t.is(sut(1000), "1.0s");
-    t.is(sut(1040), "1.0s");
-    t.is(sut(1050), "1.1s");
-    t.is(sut(1100), "1.1s");
-    t.is(sut(1900), "1.9s");
-    t.is(sut(9999), "10.0s");
-})
+    t.is(sut(0), '0ms');
+    t.is(sut(1), '1ms');
+    t.is(sut(100), '100ms');
+    t.is(sut(999), '999ms');
+    t.is(sut(1000), '1.0s');
+    t.is(sut(1040), '1.0s');
+    t.is(sut(1050), '1.1s');
+    t.is(sut(1100), '1.1s');
+    t.is(sut(1900), '1.9s');
+    t.is(sut(9999), '10.0s');
+});
 
 test('debounce', async t => {
     const sut = common.debounce;
@@ -184,24 +158,13 @@ test('debounce', async t => {
     await delayPromise(10);
 
     t.is(callCount, 3);
-})
-
-test('mapSourceLocation', t => {
-    const sut = common.mapSourceLocation;
-    const sourceMap = {"version":3,"file":"sourcemap-test.js","sourceRoot":"","sources":["sourcemap-test.ts"],"names":[],"mappings":";;AACA,gCAAkC;AAElC,IAAI,CAAC,eAAe,EAAE,UAAA,CAAC;IACnB,CAAC,CAAC,MAAI,CAAA,CAAC,KAAK,CAAC,CAAC;AAClB,CAAC,CAAC,CAAA;AAEF,IAAI,CAAC,eAAe,EAAE,UAAA,CAAC;IACnB,CAAC,CAAC,MAAI,CAAA,CAAC,KAAK,CAAC,CAAC;AAClB,CAAC,CAAC,CAAA"}
-    let result = sut(8, 5, sourceMap.mappings, sourceMap.sources, sourceMap.names);
-    t.deepEqual(result, {
-        source: 'sourcemap-test.ts',
-        line: 9,
-        column: 4,
-    });
-})
+});
 
 test('getStringDiff', t => {
     const sut = common.getStringDiff;
     t.deepEqual(sut('', ''), []);
     t.deepEqual(sut('a', 'b'), ['a', 'b']);
     t.deepEqual(sut('a\nb\nc', 'a\nb\nd'), ['c', 'd']);
-    t.deepEqual(sut('a\nb', 'a\nb\nc'), [ '', 'c' ]);
-    t.deepEqual(sut('a\nb\nc', 'a\nb'), [ 'c', '' ]);
-})
+    t.deepEqual(sut('a\nb', 'a\nb\nc'), ['', 'c']);
+    t.deepEqual(sut('a\nb\nc', 'a\nb'), ['c', '']);
+});

@@ -1,11 +1,12 @@
 /*
     aqa - dependency-less testing
 */
-const util = require("util");
+const util = require('util');
 const fs = require('fs');
 const path = require('path');
 
-const common = require("./common");
+const common = require('./common');
+const sourceMapHelper = require('./sourceMap');
 const testScriptFilename = require.main ? require.main.filename : process.argv[1];
 const thisFilename = __filename;
 let testFilenameWithoutExt = path.basename(testScriptFilename, path.extname(testScriptFilename));
@@ -16,7 +17,7 @@ let testFilename = testFilenameWithoutCwd.replace(/\\/g, '/');
 
 const _backupItems = ['process', 'console'];
 const _backup = {};
-_backupItems.forEach(b => _backup[b] = Object.getOwnPropertyDescriptor(global, b));
+_backupItems.forEach(b => (_backup[b] = Object.getOwnPropertyDescriptor(global, b)));
 const _backupRestore = () => _backupItems.forEach(b => Object.defineProperty(global, b, _backup[b]));
 const errorMatcher = /(.*):(\d+):(\d+)/;
 
@@ -32,7 +33,9 @@ const soloTests = [];
 
 const throwsDefaultOpts = {};
 
-const nop = function () { /* Used for console suppression */ };
+const nop = function () {
+    /* Used for console suppression */
+};
 const suppressedConsole = Object.freeze({
     Console: console.Console,
     log: nop,
@@ -65,11 +68,13 @@ let cachedSourceMap = new Map();
 
 /**
  * Queue a test to be run.
- * @param {string} testName 
- * @param {(t: Asserts) => unknown} testFn 
+ * @param {string} testName
+ * @param {(t: Asserts) => unknown} testFn
  */
 function aqa(testName, testFn) {
-    if (tests.find(t => t.name === testName)) console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
+    if (tests.find(t => t.name === testName)) {
+        console.log(`${common.Color.red('WARNING')}: Duplicate test name: "${testName}"`);
+    }
     let test = { name: testName, fn: testFn };
     tests.push(test);
     return test;
@@ -110,7 +115,7 @@ aqa.mock = function (lib, fnName, mockFn) {
 };
 aqa.solo = function (testName, testFn) {
     let test = aqa(testName, testFn);
-    soloTests.push(test); 
+    soloTests.push(test);
     return test;
 };
 
@@ -131,7 +136,7 @@ function addMock(lib, fnName, mockFn, list) {
             lib[fnName] = original;
         },
         calls
-    }
+    };
 }
 
 function getSourceMap(file) {
@@ -152,7 +157,7 @@ function getFilePosition(file, line, col) {
     let sourceMap = getSourceMap(file);
     if (sourceMap) {
         try {
-            let mapped = common.mapSourceLocation(line, col, sourceMap.mappings, sourceMap.sources, sourceMap.names);
+            let mapped = sourceMapHelper.mapSourceLocation(line, col, sourceMap.mappings, sourceMap.sources, sourceMap.names);
             let fileDir = path.dirname(file);
             let mapFilePath = path.join(fileDir, mapped.source);
             return `${mapFilePath}:${mapped.line}:${mapped.column} [SourceMap]`;
@@ -168,12 +173,13 @@ function getFilePosition(file, line, col) {
 function parseError(line) {
     line = line.substr(line.indexOf(testScriptFilename));
     let match = line.match(errorMatcher);
-    if (match) return {
-        file: match[1],
-        line: parseInt(match[2]),
-        column: parseInt(match[3])
-    }
-    return null;
+    return match
+        ? {
+              file: match[1],
+              line: parseInt(match[2]),
+              column: parseInt(match[3])
+          }
+        : null;
 }
 
 function getCallerFromStack(e) {
@@ -220,8 +226,7 @@ function smartify(o) {
 }
 
 function getObjectProperties(o) {
-    return Object.entries(Object.getOwnPropertyDescriptors(o))
-        .map(([key, value]) => ({ name: key, ...value }));
+    return Object.entries(Object.getOwnPropertyDescriptors(o)).map(([key, value]) => ({ name: key, ...value }));
 }
 
 function getEnumerableProperties(o) {
@@ -240,7 +245,7 @@ function areEqual(a, b) {
 function isNear(a, b, delta) {
     delta = Math.abs(delta);
     let actualDelta = a - b;
-    return Math.abs(actualDelta) <= (delta + Number.EPSILON);
+    return Math.abs(actualDelta) <= delta + Number.EPSILON;
 }
 
 function bothNaN(a, b) {
@@ -258,43 +263,57 @@ function bothString(a, b) {
 }
 
 function pathToString(path) {
-    return path.map((p, pi) => {
-        if (Number.isFinite(+p)) return `[${p}]`;
-        return pi > 0 ? '.' + p : p;
-    }).join('') || '(root)';
+    return (
+        path
+            .map((p, pi) => {
+                if (Number.isFinite(+p)) return `[${p}]`;
+                return pi > 0 ? '.' + p : p;
+            })
+            .join('') || '(root)'
+    );
 }
 
 function createDiffString(a, b) {
-    return [
-        common.Color.red('- ') + a,
-        common.Color.green('+ ') + b
-    ].join('\n')
+    return [common.Color.red('- ') + a, common.Color.green('+ ') + b].join('\n');
 }
 
 class Asserts {
-    is(actual, expected, message = "") {
+    is(actual, expected, message = '') {
         if (!areEqual(actual, expected)) {
-            throw new Error(`Actual value is not equal to expected:\n${createDiffString(smartify(actual), smartify(expected))}${prefixMessage(message, '\n')}`.trim());
+            throw new Error(
+                `Actual value is not equal to expected:\n${createDiffString(
+                    smartify(actual),
+                    smartify(expected)
+                )}${prefixMessage(message, '\n')}`.trim()
+            );
         }
     }
-    not(actual, expected, message = "") {
+    not(actual, expected, message = '') {
         if (areEqual(actual, expected)) {
             throw new Error(`Actual value is equal to expected ${prefixMessage(message)}`.trim());
         }
     }
-    near(actual, expected, delta, message = "") {
+    near(actual, expected, delta, message = '') {
         if (!isNear(actual, expected, delta)) {
             let diff = actual - expected;
-            throw new Error(`Expected ${smartify(expected)} +/- ${Math.abs(delta)}, got ${smartify(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
+            throw new Error(
+                `Expected ${smartify(expected)} +/- ${Math.abs(delta)}, got ${smartify(actual)} (difference: ${
+                    diff > 0 ? '+' : ''
+                }${diff}) ${prefixMessage(message)} `.trim()
+            );
         }
     }
-    notNear(actual, expected, delta, message = "") {
+    notNear(actual, expected, delta, message = '') {
         if (isNear(actual, expected, delta)) {
             let diff = actual - expected;
-            throw new Error(`Expected something other than ${smartify(expected)} +/- ${Math.abs(delta)}, but got ${smartify(actual)} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim());
+            throw new Error(
+                `Expected something other than ${smartify(expected)} +/- ${Math.abs(delta)}, but got ${smartify(
+                    actual
+                )} (difference: ${diff > 0 ? '+' : ''}${diff}) ${prefixMessage(message)} `.trim()
+            );
         }
     }
-    deepEqual(actual, expected, message = "", _equality = false) {
+    deepEqual(actual, expected, message = '', _equality = false) {
         if (typeof _equality !== 'boolean') _equality = false;
         const path = [];
         const addDiff = (path, a, b) => {
@@ -305,7 +324,7 @@ class Asserts {
             }
             path.push({
                 differences: createDiffString(a, b)
-            })
+            });
         };
 
         const compare = (a, b, path) => {
@@ -321,7 +340,7 @@ class Asserts {
                 return true;
             }
             // Check deeper equality
-            if (typeof a === "object" && typeof b === "object" && a != null && b != null) {
+            if (typeof a === 'object' && typeof b === 'object' && a != null && b != null) {
                 if (a instanceof Date && b instanceof Date && +a !== +b) {
                     addDiff(path, a.toISOString(), b.toISOString());
                     return false;
@@ -382,20 +401,22 @@ class Asserts {
                 let last = path.pop();
                 let diffStr = last.differences || '';
                 let pathString = pathToString(path);
-                throw new Error(`Difference found at path: ${pathString}\n${diffStr}${prefixMessage(message, '\n')}`.trim());
+                throw new Error(
+                    `Difference found at path: ${pathString}\n${diffStr}${prefixMessage(message, '\n')}`.trim()
+                );
             }
         }
     }
-    notDeepEqual(actual, expected, message = "") {
+    notDeepEqual(actual, expected, message = '') {
         this.deepEqual(actual, expected, message, true);
     }
-    true(actual, message = "") {
+    true(actual, message = '') {
         let expected = true;
         if (actual !== expected) {
             throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
         }
     }
-    false(actual, message = "") {
+    false(actual, message = '') {
         let expected = false;
         if (actual !== expected) {
             throw new Error(`Expected ${expected}, got ${actual} ${prefixMessage(message)}`.trim());
@@ -404,11 +425,15 @@ class Asserts {
     _throwsCheckType(caughtException, opts, message) {
         if (opts.instanceOf) {
             if (!(caughtException instanceof opts.instanceOf)) {
-                throw new Error(`Expected error to be an instance of '${opts.instanceOf.name}', got '${caughtException.name}' ${prefixMessage(message, '\n')}`.trim());
+                throw new Error(
+                    `Expected error to be an instance of '${opts.instanceOf.name}', got '${
+                        caughtException.name
+                    }' ${prefixMessage(message, '\n')}`.trim()
+                );
             }
         }
     }
-    throws(fn, opts, message = "") {
+    throws(fn, opts, message = '') {
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
 
@@ -426,16 +451,21 @@ class Asserts {
         }
         throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
     }
-    notThrows(fn, message = "") {
+    notThrows(fn, message = '') {
         try {
             if (typeof fn === 'function') {
                 fn();
             }
         } catch (e) {
-            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
+            throw new Error(
+                `Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(
+                    message,
+                    '\n'
+                )}`.trim()
+            );
         }
     }
-    async throwsAsync(fn, opts, message = "") {
+    async throwsAsync(fn, opts, message = '') {
         opts = { throwsDefaultOpts, ...opts };
         let caughtException = null;
 
@@ -453,27 +483,36 @@ class Asserts {
         }
         throw new Error(`Expected an exception ${prefixMessage(message)}`.trim());
     }
-    async notThrowsAsync(fn, message = "") {
+    async notThrowsAsync(fn, message = '') {
         try {
             if (typeof fn === 'function') {
                 await fn();
             }
         } catch (e) {
-            throw new Error(`Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(message, '\n')}`.trim());
+            throw new Error(
+                `Expected no exception, got exception of type '${e.name}': ${e.message} ${prefixMessage(
+                    message,
+                    '\n'
+                )}`.trim()
+            );
         }
     }
     disableLogging() {
         global.console = suppressedConsole;
     }
-    log(_s) { /* Overwritten later */ }
+    log(_s) {
+        /* Overwritten later */
+    }
     /**
      * Mock a function in a library.
-     * @param {any} _lib 
-     * @param {string} _fnName 
+     * @param {any} _lib
+     * @param {string} _fnName
      * @param {(...args: any[]) => any} _mockFn
      * @returns {{ restore: () => void, calls: any[][] }}
      */
-    mock(_lib, _fnName, _mockFn) { /** @ts-ignore */return null; }
+    mock(_lib, _fnName, _mockFn) {
+        /** @ts-ignore */ return null;
+    }
 }
 
 const t = new Asserts();
@@ -481,10 +520,12 @@ const t = new Asserts();
 function outputFailure(testName, caughtException, fileName) {
     if (!(caughtException instanceof Error)) {
         if (typeof caughtException !== 'object') {
-            caughtException = { message: caughtException }
+            caughtException = { message: caughtException };
         }
         caughtException = Object.assign(new Error(), caughtException);
-        caughtException.message = '[WARNING: aqa could not determine stack information, because the thrown object was not an Error.] ' + caughtException.message;
+        caughtException.message =
+            '[WARNING: aqa could not determine stack information, because the thrown object was not an Error.] ' +
+            caughtException.message;
     }
     let testErrorLine = getCallerFromStack(caughtException);
     let errorMessage = caughtException.toString();
@@ -501,29 +542,47 @@ function outputFailure(testName, caughtException, fileName) {
 }
 
 /**
- * 
- * @param {TestResult} testResult 
+ *
+ * @param {TestResult} testResult
  */
 function outputReport(testResult) {
     let reporter = (packageConfig.reporter || '').toLocaleLowerCase();
     let result = '';
 
-    const makeXmlSafe = (s) => {
+    const makeXmlSafe = s => {
         if (typeof s !== 'string') return s;
         s = common.Color.strip(s);
-        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+        return s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
     };
 
     if (reporter === 'junit') {
-        result = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-            `<testsuites name="aqa tests" tests="${testResult.numTests}" failures="${testResult.numFailedTests}" time="${testResult.duration / 1000}">\n` +
-            `  <testsuite name="${makeXmlSafe(testResult.name)}" tests="${testResult.numTests}" failures="${testResult.numFailedTests}" timestamp="${testResult.startTime.toISOString()}" time="${testResult.duration / 1000}">\n` +
-            testResult.testCases.map(testCase => {
-                return `    <testcase name="${makeXmlSafe(testCase.name)}" classname="${makeXmlSafe(testResult.name)}" time="${testCase.duration / 1000}">\n` +
-                    (!testCase.success && testCase.failureMessage != null ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n` : '') +
-                    (testCase.skipped ? `      <skipped>${testCase.skipMessage || ''}</skipped>\n` : '') +
-                    `    </testcase>\n`;
-            }).join('') +
+        result =
+            `<?xml version="1.0" encoding="UTF-8"?>\n` +
+            `<testsuites name="aqa tests" tests="${testResult.numTests}" failures="${
+                testResult.numFailedTests
+            }" time="${testResult.duration / 1000}">\n` +
+            `  <testsuite name="${makeXmlSafe(testResult.name)}" tests="${testResult.numTests}" failures="${
+                testResult.numFailedTests
+            }" timestamp="${testResult.startTime.toISOString()}" time="${testResult.duration / 1000}">\n` +
+            testResult.testCases
+                .map(testCase => {
+                    return (
+                        `    <testcase name="${makeXmlSafe(testCase.name)}" classname="${makeXmlSafe(
+                            testResult.name
+                        )}" time="${testCase.duration / 1000}">\n` +
+                        (!testCase.success && testCase.failureMessage != null
+                            ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n`
+                            : '') +
+                        (testCase.skipped ? `      <skipped>${testCase.skipMessage || ''}</skipped>\n` : '') +
+                        `    </testcase>\n`
+                    );
+                })
+                .join('') +
             `  </testsuite>\n` +
             `</testsuites>`;
         let outputDir = packageConfig.reporterOptions?.outputDir || '';
@@ -531,15 +590,20 @@ function outputReport(testResult) {
         let outputPath = path.join(outputDir, outputFileName);
         fs.mkdirSync(outputDir, { recursive: true });
         fs.writeFileSync(outputPath, result);
-    }
-    else if (reporter === 'tap') {
-        let testCases = testResult.testCases.map((testCase, i) => {
-            return `${testCase.success ? 'ok' : 'not ok'} ${i + 1} - ${testCase.name}` +
-                (testCase.skipped ? `  # SKIP ${testCase.failureMessage}` : '');
-        }).join('\n');
-        result = `TAP version 13\n` +
+    } else if (reporter === 'tap') {
+        let testCases = testResult.testCases
+            .map((testCase, i) => {
+                return (
+                    `${testCase.success ? 'ok' : 'not ok'} ${i + 1} - ${testCase.name}` +
+                    (testCase.skipped ? `  # SKIP ${testCase.failureMessage}` : '')
+                );
+            })
+            .join('\n');
+        result =
+            `TAP version 13\n` +
             `1..${testResult.numTests}\n` +
-            testCases + '\n' +
+            testCases +
+            '\n' +
             `# tests ${testResult.numTests}\n` +
             `# pass ${testResult.numTests - testResult.numFailedTests}\n` +
             `# fail ${testResult.numFailedTests}\n` +
@@ -551,10 +615,9 @@ function outputReport(testResult) {
     return result;
 }
 
-
 setImmediate(async function aqa_tests_runner() {
     let isVerbose = packageConfig.verbose;
-    const startMs = +new Date;
+    const startMs = +new Date();
 
     const soloTestFns = soloTests.map(t => t.fn);
     const skippedBySolo = soloTests.length > 0 ? tests.filter(t => !soloTestFns.includes(t.fn)) : [];
@@ -567,7 +630,7 @@ setImmediate(async function aqa_tests_runner() {
     /** @type {TestResult} */
     const testResult = {
         duration: 0,
-        startTime: new Date,
+        startTime: new Date(),
         name: testFilename,
         numFailedTests: 0,
         numTests: 0,
@@ -575,11 +638,11 @@ setImmediate(async function aqa_tests_runner() {
     };
 
     const runBeforeAfter = async (fn, name) => {
-        let testCaseStartMs = +new Date;
+        let testCaseStartMs = +new Date();
         /** @type {TestCaseResult} */
         let testCase = {
             duration: 0,
-            startTime: new Date,
+            startTime: new Date(),
             name: name + ' - ' + testFilename,
             failureMessage: null,
             success: false,
@@ -598,7 +661,7 @@ setImmediate(async function aqa_tests_runner() {
             fails++;
             testCase.failureMessage = outputFailure(name, e, testFilenameWithoutExt);
         }
-        testCase.duration = +new Date - testCaseStartMs;
+        testCase.duration = +new Date() - testCaseStartMs;
         testCase.success = !testCase.failureMessage;
         return testCase.success;
     };
@@ -614,7 +677,7 @@ setImmediate(async function aqa_tests_runner() {
         /** @type {TestCaseResult} */
         let testCaseResult = {
             duration: 0,
-            startTime: new Date,
+            startTime: new Date(),
             name: test.name,
             failureMessage: null,
             success: false,
@@ -622,7 +685,7 @@ setImmediate(async function aqa_tests_runner() {
         };
         testResult.testCases.push(testCaseResult);
 
-        let testStartMs = +new Date;
+        let testStartMs = +new Date();
 
         if (beforeFailed || skipFile) {
             testCaseResult.skipped = true;
@@ -636,7 +699,11 @@ setImmediate(async function aqa_tests_runner() {
         }
 
         if (testCaseResult.skipped) {
-            console.error(common.Color.yellow(`SKIPPED: `), test.name, common.Color.gray(`(${testCaseResult.skipMessage})`));
+            console.error(
+                common.Color.yellow(`SKIPPED: `),
+                test.name,
+                common.Color.gray(`(${testCaseResult.skipMessage})`)
+            );
             continue;
         }
         let ok = true;
@@ -649,7 +716,7 @@ setImmediate(async function aqa_tests_runner() {
         let localMocks = [];
         localT.mock = (lib, fnName, mockFn) => {
             return addMock(lib, fnName, mockFn, localMocks);
-        }
+        };
 
         if (isVerbose) {
             console.log(`Running test: "${test.name}"`);
@@ -674,7 +741,7 @@ setImmediate(async function aqa_tests_runner() {
             ok = false;
         }
 
-        let elapsedTestMs = +new Date - testStartMs;
+        let elapsedTestMs = +new Date() - testStartMs;
 
         testCaseResult.success = ok;
         testCaseResult.duration = elapsedTestMs;
@@ -690,7 +757,7 @@ setImmediate(async function aqa_tests_runner() {
 
         if (logs.length > 0) {
             console.log(`[Log output for "${test.name}":]`);
-            logs.forEach(args => console.log(...args))
+            logs.forEach(args => console.log(...args));
         }
 
         if (ok) {
@@ -711,7 +778,7 @@ setImmediate(async function aqa_tests_runner() {
         await runBeforeAfter(fn, 'after');
     }
 
-    const elapsedMs = +new Date - startMs;
+    const elapsedMs = +new Date() - startMs;
 
     testResult.duration = elapsedMs;
     testResult.numFailedTests = fails;
@@ -719,11 +786,17 @@ setImmediate(async function aqa_tests_runner() {
     outputReport(testResult);
 
     if (fails === 0) {
-        console.log(common.Color.green(` Ran ${actuallyRanTests} test${actuallyRanTests === 1 ? '' : 's'} successfully!`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        console.log(
+            common.Color.green(` Ran ${actuallyRanTests} test${actuallyRanTests === 1 ? '' : 's'} successfully!`),
+            common.Color.gray(`(${common.humanTime(elapsedMs)})`)
+        );
     } else {
-        console.error(common.Color.red(` ${fails} test failed.`), common.Color.gray(`(${common.humanTime(elapsedMs)})`))
+        console.error(
+            common.Color.red(` ${fails} test failed.`),
+            common.Color.gray(`(${common.humanTime(elapsedMs)})`)
+        );
         process.exit(1);
     }
-})
+});
 
 module.exports = aqa;

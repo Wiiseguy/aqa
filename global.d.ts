@@ -10,7 +10,7 @@ declare interface AqaPackageReporterOptions {
 }
 
 declare interface TestResult {
-    name: string;   
+    name: string;
     startTime: Date;
     numTests: number;
     numFailedTests: number;

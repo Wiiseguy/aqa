@@ -1,7 +1,7 @@
 /* c8 ignore start */ // Remove this line when we've found a way to cover the bits of this code that do not work across all platforms
-const fs = require("fs");
-const path = require("path");
-const common = require("./common");
+const fs = require('fs');
+const path = require('path');
+const common = require('./common');
 
 const cwd = process.cwd();
 const cwds = path.join(cwd, '/');
@@ -21,7 +21,8 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
 
     if (arg0) {
         let reGlob = common.microMatch(arg0);
-        if (typeof reGlob === 'string') { // Not a regexp, just try to testrun the file
+        if (typeof reGlob === 'string') {
+            // Not a regexp, just try to testrun the file
             testsFiles.push(arg0);
         } else {
             allFiles = await common.getFiles(cwd);
@@ -46,7 +47,7 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
         clearTimeout(requestTimeout);
         requestTimeout = setTimeout(_ => {
             console.log(' ');
-            console.log(common.Color.gray("[watch] Changes detected, running tests..."));
+            console.log(common.Color.gray('[watch] Changes detected, running tests...'));
             if (isVerbose) {
                 console.log(requested.map(r => path.basename(r)).join(', '));
             }
@@ -77,7 +78,7 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
                     console.log('Watch triggered for test file:', type, fileName);
                 }
                 requestRun(tf);
-            })
+            });
         });
 
         // Watch non-test files and simply run all tests when these change
@@ -96,10 +97,10 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
                     // Test all files
                     requestRuns(testsFiles);
                 }
-            })
+            });
         });
 
-        console.log(common.Color.gray("[watch] aqa - watcher active, waiting for file changes..."));
+        console.log(common.Color.gray('[watch] aqa - watcher active, waiting for file changes...'));
 
         if (typeof onScan === 'function') {
             onScan(testsFiles, nonTestFiles);
@@ -128,7 +129,7 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
                 console.log('New file detected:', resolvedFileName, '- rescanning');
                 scanAndWatch();
             }
-        })
+        });
     } catch (e) {
         // Recursive watch is probably not supported on this platform
         console.log(common.Color.yellow('[watch] Warning: ' + e.message));
@@ -139,20 +140,19 @@ async function watchFiles(arg0, runTests, isVerbose, stopSignal, onScan) {
     // Initial run
     //testsFiles.forEach(tf => requestRun(tf));
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         if (stopSignal) {
             stopSignal.stop = function () {
                 fileWatchers.forEach(w => w.close());
                 if (dirWatcher) {
-                    dirWatcher.close()
+                    dirWatcher.close();
                 }
                 resolve();
-            }
+            };
         }
     });
 }
 
-
 module.exports = {
     watchFiles
-}
+};
