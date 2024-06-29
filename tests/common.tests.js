@@ -98,11 +98,13 @@ test('filterFiles - REGEXP_TEST_FILES', async t => {
 test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
     let sut = common.filterFiles;
     let files = [
-        'C:\\DEV\\something.js',
+        'C:\\DEV\\something.js', 
+        'C:\\DEV\\something.js.map',
         'C:\\DEV\\_ignore\\test.js',
         'C:\\DEV\\node_modules\\test.js',
 
         'C:\\DEV\\test.js',
+        'C:\\DEV\\tests.js',
         'C:\\DEV\\test-something.js',
         'C:/DEV/test-something.js',
         'tests/test-something.js',
@@ -113,9 +115,10 @@ test('filterFiles - REGEXP_TEST_FILES + REGEXP_IGNORE_FILES', async t => {
         'C:\\DEV\\tests\\b.js',
         'C:\\DEV\\__tests__\\c.js'
     ];
-    let testFiles = files.slice(3);
+    let testFiles = files.slice(4); // Everything except the first 4
 
-    t.deepEqual(sut(files, common.REGEXP_TEST_FILES, common.REGEXP_IGNORE_FILES), testFiles);
+    let filtered = sut(files, common.REGEXP_TEST_FILES, common.REGEXP_IGNORE_FILES)
+    t.deepEqual(filtered, testFiles);
 });
 
 test('humanTime', async t => {

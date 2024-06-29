@@ -205,7 +205,7 @@ function poll(fn, timeout, tries = 2) {
 }
 
 const REGEXP_TEST_FILES = [
-    'tests?.js',
+    microMatch('tests?.js'),
     microMatch('*tests?.js'),
     microMatch('*/test-*.js'),
     microMatch('*.spec.js'),
