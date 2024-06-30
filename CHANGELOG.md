@@ -2,6 +2,9 @@
 
 ## 2024
 
+### [1.6.10] (30-jun-2024)
+- Fix: added missing `test.skip` to index.d.ts
+
 ### [1.6.9] (28-jun-2024)
 - Added `test.mock()` to mock library methods on a global level
 - Added `test.solo()` to run only a single test
