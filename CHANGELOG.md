@@ -2,8 +2,12 @@
 
 ## 2024
 
-### [1.6.10] (30-jun-2024)
+### [1.6.11] (30-jun-2024)
 - Fix: added missing `test.skip` to index.d.ts
+
+### [1.6.10] (29-jun-2024)
+- Cleaned up source code, added prettier
+- Fix: incorrect RegExp for matching test files that was added in 1.6.9
 
 ### [1.6.9] (28-jun-2024)
 - Added `test.mock()` to mock library methods on a global level
