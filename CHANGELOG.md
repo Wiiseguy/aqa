@@ -2,6 +2,9 @@
 
 ## 2024
 
+### [1.6.12] (03-jul-2024)
+- Fix: fixed TS definition for `test.skip`
+
 ### [1.6.11] (30-jun-2024)
 - Fix: added missing `test.skip` to index.d.ts
 

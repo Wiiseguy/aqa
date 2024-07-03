@@ -12,10 +12,7 @@ declare namespace aqa {
     var skipFile: (reason?: string) => void;
     var mock: (lib: any, fnName: string, mockFn: any) => { restore: () => void; calls: any[][] };
     var solo: (testName: string, testFn: (t: Asserts) => unknown) => { name: string; fn: (t: Asserts) => unknown };
-    var skip = (testName: string, testFn: (t: Asserts) => unknown) => {
-        name: string;
-        fn: (t: Asserts) => unknown;
-    };
+    var skip: (testName: string, testFn: (t: Asserts) => unknown) => { name: string; fn: (t: Asserts) => unknown };
 
     interface Asserts {
         is(actual: any, expected: any, message?: string): void;
