@@ -23,9 +23,9 @@ declare namespace aqa {
         notDeepEqual(actual: any, expected: any, message?: string): void;
         true(actual: any, message?: string): void;
         false(actual: any, message?: string): void;
-        throws(fn: any, opts: any, message?: string): any;
+        throws(fn: any, opts?: any, message?: string): any;
         notThrows(fn: any, message?: string): void;
-        throwsAsync(fn: any, opts: any, message?: string): Promise<any>;
+        throwsAsync(fn: any, opts?: any, message?: string): Promise<any>;
         notThrowsAsync(fn: any, message?: string): Promise<void>;
         disableLogging(): void;
         log(s?: any): void;

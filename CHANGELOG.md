@@ -2,6 +2,9 @@
 
 ## 2024
 
+### [1.6.13] (04-jul-2024)
+- Fix: made opts param optional in `throws` and `throwsAsync`
+
 ### [1.6.12] (03-jul-2024)
 - Fix: fixed TS definition for `test.skip`
 
