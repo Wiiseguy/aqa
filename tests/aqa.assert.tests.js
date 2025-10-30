@@ -497,6 +497,18 @@ test('Getters & deepEqual', t => {
     });
 });
 
+test('RegExp & deepEqual', t => {
+    let o = {
+        a: /test1/i
+    };
+    let ex = t.throws(() =>
+        t.deepEqual(o, {
+            a: /test2/i
+        })
+    );
+    t.is(Color.strip(ex.message), 'Difference found at path: a\n- /test1/i\n+ /test2/i');
+});
+
 test('Non-enumerable properties & deepEqual', t => {
     let o = {};
 

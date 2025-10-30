@@ -204,7 +204,9 @@ test('Test JUnit report - default', async t => {
     t.true(
         report.includes('<testcase name="before - /tests/_self/before-fail.js" classname="/tests/_self/before-fail.js"')
     );
-    t.true(report.includes('<failure message="Error: Expected true, got false'));
+    t.true(
+        report.includes('<failure message="Error: Expected true, got false"><![CDATA[Error: Expected true, got false\n')
+    );
     t.true(report.includes('<testcase name="x1" classname="/tests/_self/before-fail.js"'));
     t.true(report.includes('<testcase name="x2" classname="/tests/_self/before-fail.js"'));
     t.true(report.includes('<skipped>before-tests failed</skipped>'));

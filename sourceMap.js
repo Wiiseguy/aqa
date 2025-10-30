@@ -136,6 +136,6 @@ function mapSourceLocation(actualLine, actualColumn, mappings, sources, names) {
     return result;
 }
 
-module.exports = {   
+module.exports = {
     mapSourceLocation
 };

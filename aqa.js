@@ -157,7 +157,13 @@ function getFilePosition(file, line, col) {
     let sourceMap = getSourceMap(file);
     if (sourceMap) {
         try {
-            let mapped = sourceMapHelper.mapSourceLocation(line, col, sourceMap.mappings, sourceMap.sources, sourceMap.names);
+            let mapped = sourceMapHelper.mapSourceLocation(
+                line,
+                col,
+                sourceMap.mappings,
+                sourceMap.sources,
+                sourceMap.names
+            );
             let fileDir = path.dirname(file);
             let mapFilePath = path.join(fileDir, mapped.source);
             return `${mapFilePath}:${mapped.line}:${mapped.column} [SourceMap]`;
@@ -500,6 +506,7 @@ class Asserts {
     disableLogging() {
         global.console = suppressedConsole;
     }
+    /* c8 ignore start */
     log(_s) {
         /* Overwritten later */
     }
@@ -511,8 +518,10 @@ class Asserts {
      * @returns {{ restore: () => void, calls: any[][] }}
      */
     mock(_lib, _fnName, _mockFn) {
+        /* Overwritten later */
         /** @ts-ignore */ return null;
     }
+    /* c8 ignore end */
 }
 
 const t = new Asserts();
@@ -576,7 +585,9 @@ function outputReport(testResult) {
                             testResult.name
                         )}" time="${testCase.duration / 1000}">\n` +
                         (!testCase.success && testCase.failureMessage != null
-                            ? `      <failure message="${makeXmlSafe(testCase.failureMessage)}"></failure>\n`
+                            ? `      <failure message="${makeXmlSafe(
+                                  testCase.failureMessage.split('\n')[0]
+                              )}"><![CDATA[${makeXmlSafe(testCase.failureMessage)}]]></failure>\n`
                             : '') +
                         (testCase.skipped ? `      <skipped>${testCase.skipMessage || ''}</skipped>\n` : '') +
                         `    </testcase>\n`
