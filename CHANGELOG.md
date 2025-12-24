@@ -2,7 +2,7 @@
 
 ## 2025
 
-### [1.6.14] (12-jun-2025)
+### [1.6.14] (30-oct-2025)
 
 -   Fix: corrected JUnit report failure message formatting to use CDATA sections.
 
